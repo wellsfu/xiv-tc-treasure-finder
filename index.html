@@ -11,63 +11,75 @@
     <div class="container">
         <header>
             <h1>FFXIV 藏寶圖查詢器</h1>
-            <p class="subtitle">繁體中文版 - 點擊地圖標記位置</p>
+            <p class="subtitle">繁體中文版 - 選擇藏寶圖等級開始</p>
         </header>
 
-        <div class="controls">
-            <div class="control-group">
-                <label for="map-select">選擇地圖區域：</label>
-                <select id="map-select">
-                    <option value="">-- 選擇地圖 --</option>
-                </select>
+        <!-- 步驟 1: 選擇藏寶圖等級 -->
+        <section class="step-section" id="step-grade">
+            <h2 class="step-title">選擇藏寶圖等級</h2>
+            <div class="grade-grid" id="grade-grid">
+                <!-- 等級按鈕由 JS 生成 -->
             </div>
-            <div class="control-group">
-                <label for="item-select">藏寶圖類型：</label>
-                <select id="item-select">
-                    <option value="">-- 全部 --</option>
-                </select>
-            </div>
-            <button id="reset-btn" class="btn-reset">重置</button>
-        </div>
+        </section>
 
-        <div class="main-content">
-            <div class="map-container" id="map-container">
-                <div class="map-placeholder">
-                    <p>請選擇地圖區域</p>
-                </div>
-                <img id="map-image" class="map-image hidden" alt="地圖">
-                <div id="map-markers" class="map-markers"></div>
-                <div id="selected-marker" class="selected-marker hidden">
-                    <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="寶藏標記">
-                </div>
+        <!-- 步驟 2: 選擇地圖 -->
+        <section class="step-section hidden" id="step-map">
+            <div class="step-header">
+                <button class="btn-back" id="back-to-grade">← 返回等級選擇</button>
+                <h2 class="step-title">選擇地圖 - <span id="selected-grade-name"></span></h2>
+            </div>
+            <div class="map-grid" id="map-grid">
+                <!-- 地圖按鈕由 JS 生成 -->
+            </div>
+        </section>
+
+        <!-- 步驟 3: 顯示謎題和位置 -->
+        <section class="step-section hidden" id="step-treasure">
+            <div class="step-header">
+                <button class="btn-back" id="back-to-map">← 返回地圖選擇</button>
+                <h2 class="step-title"><span id="selected-map-name"></span></h2>
             </div>
 
-            <div class="treasure-list" id="treasure-list">
-                <h3>可能的藏寶點</h3>
-                <div class="treasure-items" id="treasure-items">
-                    <p class="no-selection">選擇地圖後將顯示藏寶點列表</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="result-panel hidden" id="result-panel">
-            <h3>選中的藏寶點</h3>
-            <div class="result-content">
-                <div class="result-map">
-                    <img id="result-map-image" alt="結果地圖">
-                    <div id="result-marker" class="result-marker">
-                        <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="寶藏標記">
+            <div class="treasure-view">
+                <!-- 左側：大地圖 -->
+                <div class="main-map-container">
+                    <div class="map-wrapper">
+                        <img id="main-map-image" class="main-map-image" alt="地圖">
+                        <div id="map-markers" class="map-markers"></div>
+                        <div id="selected-marker" class="selected-marker hidden">
+                            <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="選中標記">
+                        </div>
                     </div>
                 </div>
-                <div class="result-info">
-                    <p><strong>地圖：</strong><span id="result-map-name"></span></p>
-                    <p><strong>座標：</strong><span id="result-coords"></span></p>
-                    <p><strong>藏寶圖類型：</strong><span id="result-item"></span></p>
-                    <p><strong>隊伍人數：</strong><span id="result-party"></span></p>
+
+                <!-- 右側：謎題圖片列表 -->
+                <div class="puzzle-panel">
+                    <h3>所有藏寶點 (<span id="treasure-count">0</span>)</h3>
+                    <div class="puzzle-grid" id="puzzle-grid">
+                        <!-- 謎題圖片由 JS 生成 -->
+                    </div>
                 </div>
             </div>
-            <button id="find-another-btn" class="btn-primary">尋找其他藏寶點</button>
-        </div>
+
+            <!-- 選中詳情 -->
+            <div class="detail-panel hidden" id="detail-panel">
+                <h3>藏寶點詳情</h3>
+                <div class="detail-content">
+                    <div class="detail-map">
+                        <img id="detail-map-image" alt="詳情地圖">
+                        <div id="detail-marker" class="detail-marker">
+                            <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="標記">
+                        </div>
+                    </div>
+                    <div class="detail-info">
+                        <p><strong>座標：</strong><span id="detail-coords"></span></p>
+                        <p><strong>地圖：</strong><span id="detail-map-name"></span></p>
+                        <p><strong>藏寶圖：</strong><span id="detail-item"></span></p>
+                        <p><strong>隊伍類型：</strong><span id="detail-party"></span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <footer>
             <p>資料來源：<a href="https://ffxivteamcraft.com" target="_blank">FFXIV Teamcraft</a></p>

@@ -1,3 +1,21 @@
+// 藏寶圖等級數據 (由高到低排序)
+const GRADE_DATA = [
+    { grade: "G18", itemId: 46185, name: "陳舊的奧卡大蜥蜴革地圖", partySize: 8, expansion: "黃金時代" },
+    { grade: "G17", itemId: 43557, name: "陳舊的獰豹革地圖", partySize: 8, expansion: "黃金時代" },
+    { grade: "G16", itemId: 43556, name: "陳舊的銀狼革地圖", partySize: 1, expansion: "黃金時代" },
+    { grade: "G15", itemId: 39591, name: "陳舊的蛇牛革地圖", partySize: 8, expansion: "曉月之終" },
+    { grade: "G14", itemId: 36612, name: "陳舊的金毗羅鱷革地圖", partySize: 8, expansion: "曉月之終" },
+    { grade: "G13", itemId: 36611, name: "陳舊的賽加羚羊革地圖", partySize: 1, expansion: "曉月之終" },
+    { grade: "G12", itemId: 26745, name: "陳舊的纏尾蛟革地圖", partySize: 8, expansion: "闇影之逆" },
+    { grade: "G11", itemId: 26744, name: "陳舊的綠飄龍革地圖", partySize: 1, expansion: "闇影之逆" },
+    { grade: "綠圖", itemId: 19770, name: "深層傳送魔紋的地圖", partySize: 8, expansion: "紅蓮之狂潮", special: true },
+    { grade: "G10", itemId: 17836, name: "陳舊的瞪羚革地圖", partySize: 8, expansion: "紅蓮之狂潮" },
+    { grade: "G9", itemId: 17835, name: "陳舊的迦迦納怪鳥革地圖", partySize: 1, expansion: "紅蓮之狂潮" },
+    { grade: "G8", itemId: 12243, name: "陳舊的巨龍革地圖", partySize: 8, expansion: "蒼穹之禁城" },
+    { grade: "G7", itemId: 12242, name: "陳舊的飛龍革地圖", partySize: 1, expansion: "蒼穹之禁城" },
+    { grade: "G6", itemId: 12241, name: "陳舊的古鳥革地圖", partySize: 1, expansion: "蒼穹之禁城" }
+];
+
 // 藏寶圖物品名稱 (繁中)
 const ITEM_NAMES = {
     6688: "陳舊的鞣革地圖",
@@ -155,4 +173,26 @@ function getMapName(mapId) {
 // 輔助函數：獲取物品名稱
 function getItemName(itemId) {
     return ITEM_NAMES[itemId] || `物品 ${itemId}`;
+}
+
+// 輔助函數：根據物品ID獲取等級信息
+function getGradeByItemId(itemId) {
+    return GRADE_DATA.find(g => g.itemId === itemId);
+}
+
+// 輔助函數：獲取某等級可用的地圖列表
+function getMapsForGrade(gradeInfo) {
+    const treasuresForGrade = TREASURES.filter(t => t.item === gradeInfo.itemId);
+    const mapIds = [...new Set(treasuresForGrade.map(t => t.map))];
+    return mapIds.map(id => ({
+        id,
+        name: getMapName(id),
+        image: MAP_DATA[id]?.image,
+        count: treasuresForGrade.filter(t => t.map === id).length
+    })).sort((a, b) => a.name.localeCompare(b.name, 'zh-TW'));
+}
+
+// 輔助函數：獲取某等級某地圖的所有藏寶點
+function getTreasuresForGradeAndMap(gradeInfo, mapId) {
+    return TREASURES.filter(t => t.item === gradeInfo.itemId && t.map === mapId);
 }

@@ -14,6 +14,8 @@
     --accent-hover: #ff6b6b;
     --border: #3a3a5c;
     --success: #4ecca3;
+    --party-8: #ffd700;
+    --party-1: #87ceeb;
 }
 
 body {
@@ -48,102 +50,216 @@ header h1 {
     font-size: 0.9rem;
 }
 
-.controls {
+.hidden {
+    display: none !important;
+}
+
+/* Step Sections */
+.step-section {
+    margin-bottom: 30px;
+}
+
+.step-header {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 15px;
-    align-items: flex-end;
-    padding: 15px;
-    background: var(--bg-secondary);
-    border-radius: 8px;
     margin-bottom: 20px;
 }
 
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+.step-title {
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    margin-bottom: 15px;
 }
 
-.control-group label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+.step-header .step-title {
+    margin-bottom: 0;
 }
 
-select {
-    padding: 10px 15px;
-    font-size: 1rem;
+/* Back Button */
+.btn-back {
+    padding: 8px 16px;
     background: var(--bg-tertiary);
     color: var(--text-primary);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    min-width: 200px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
-select:focus {
-    outline: none;
+.btn-back:hover {
+    background: var(--border);
     border-color: var(--accent);
 }
 
-.btn-reset, .btn-primary {
-    padding: 10px 20px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 4px;
+/* Grade Grid */
+.grade-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.grade-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px 20px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 10px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.2s;
+    text-align: left;
 }
 
-.btn-reset {
-    background: var(--bg-tertiary);
+.grade-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.2);
+}
+
+.grade-btn.party-8 {
+    border-left: 4px solid var(--party-8);
+}
+
+.grade-btn.party-1 {
+    border-left: 4px solid var(--party-1);
+}
+
+.grade-btn.special {
+    background: linear-gradient(135deg, var(--bg-secondary), #1a3a2e);
+    border-color: var(--success);
+}
+
+.grade-label {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.grade-btn.special .grade-label {
+    color: var(--success);
+}
+
+.grade-name {
+    font-size: 0.9rem;
     color: var(--text-primary);
+    margin: 5px 0;
 }
 
-.btn-reset:hover {
-    background: var(--border);
+.grade-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
 }
 
-.btn-primary {
-    background: var(--accent);
-    color: white;
+.party-badge, .expansion-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
-.btn-primary:hover {
-    background: var(--accent-hover);
+.party-badge {
+    background: var(--bg-tertiary);
 }
 
-.main-content {
+.grade-btn.party-8 .party-badge {
+    color: var(--party-8);
+}
+
+.grade-btn.party-1 .party-badge {
+    color: var(--party-1);
+}
+
+/* Map Grid */
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.map-btn {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.map-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.2);
+}
+
+.map-btn-image {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+}
+
+.map-btn-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.map-btn:hover .map-btn-image img {
+    transform: scale(1.05);
+}
+
+.map-btn-info {
+    padding: 12px;
+    text-align: center;
+}
+
+.map-btn-name {
+    display: block;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.map-btn-count {
+    font-size: 0.85rem;
+    color: var(--success);
+}
+
+/* Treasure View */
+.treasure-view {
     display: grid;
     grid-template-columns: 1fr 350px;
     gap: 20px;
+    margin-bottom: 20px;
 }
 
-@media (max-width: 900px) {
-    .main-content {
+@media (max-width: 1000px) {
+    .treasure-view {
         grid-template-columns: 1fr;
     }
 }
 
-.map-container {
-    position: relative;
+/* Main Map Container */
+.main-map-container {
     background: var(--bg-secondary);
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
+}
+
+.map-wrapper {
+    position: relative;
+    width: 100%;
     aspect-ratio: 1;
-    max-height: 600px;
 }
 
-.map-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--text-secondary);
-    font-size: 1.2rem;
-}
-
-.map-image {
+.main-map-image {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -160,30 +276,45 @@ select:focus {
 
 .treasure-marker {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     transform: translate(-50%, -50%);
     cursor: pointer;
     pointer-events: auto;
     transition: transform 0.2s;
     z-index: 10;
+    background: var(--accent);
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .treasure-marker:hover {
-    transform: translate(-50%, -50%) scale(1.3);
+    transform: translate(-50%, -50%) scale(1.2);
+    z-index: 15;
 }
 
-.treasure-marker img {
-    width: 100%;
-    height: 100%;
+.treasure-marker.active {
+    transform: translate(-50%, -50%) scale(1.3);
+    background: var(--success);
+    z-index: 20;
+}
+
+.marker-number {
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
 }
 
 .selected-marker {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     transform: translate(-50%, -50%);
-    z-index: 20;
+    z-index: 25;
+    pointer-events: none;
     animation: pulse 1.5s infinite;
 }
 
@@ -195,164 +326,188 @@ select:focus {
 @keyframes pulse {
     0%, 100% {
         transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
     }
     50% {
         transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
     }
 }
 
-.hidden {
-    display: none !important;
-}
-
-.treasure-list {
+/* Puzzle Panel */
+.puzzle-panel {
     background: var(--bg-secondary);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 15px;
-    max-height: 600px;
+    max-height: 650px;
     overflow-y: auto;
 }
 
-.treasure-list h3 {
+.puzzle-panel h3 {
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
-    font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
-.treasure-items {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.no-selection {
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 20px;
-}
-
-.treasure-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    background: var(--bg-tertiary);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    border: 2px solid transparent;
-}
-
-.treasure-item:hover {
-    background: var(--border);
-    transform: translateX(5px);
-}
-
-.treasure-item.selected {
-    border-color: var(--accent);
-    background: rgba(233, 69, 96, 0.2);
-}
-
-.treasure-item-icon {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-}
-
-.treasure-item-icon img {
-    width: 100%;
-    height: 100%;
-}
-
-.treasure-item-info {
-    flex: 1;
-}
-
-.treasure-item-coords {
-    font-weight: bold;
-    color: var(--success);
-}
-
-.treasure-item-meta {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    display: flex;
-    gap: 10px;
-}
-
-.party-size {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.party-icon {
-    width: 14px;
-    height: 14px;
-    opacity: 0.7;
-}
-
-.result-panel {
-    margin-top: 20px;
-    padding: 20px;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    border: 2px solid var(--accent);
-}
-
-.result-panel h3 {
-    margin-bottom: 15px;
-    color: var(--accent);
-}
-
-.result-content {
+.puzzle-grid {
     display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 
-@media (max-width: 700px) {
-    .result-content {
-        grid-template-columns: 1fr;
+@media (max-width: 1000px) {
+    .puzzle-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
 
-.result-map {
+.puzzle-card {
     position: relative;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.puzzle-card:hover {
+    border-color: var(--accent);
+}
+
+.puzzle-card.active {
+    border-color: var(--success);
+    box-shadow: 0 0 10px rgba(78, 204, 163, 0.3);
+}
+
+.puzzle-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 5;
+}
+
+.puzzle-card.active .puzzle-number {
+    background: var(--success);
+}
+
+.puzzle-preview {
+    position: relative;
+    width: 100%;
     aspect-ratio: 1;
-    border-radius: 6px;
     overflow: hidden;
 }
 
-.result-map img {
+.puzzle-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.result-marker {
+.puzzle-marker {
     position: absolute;
-    width: 32px;
-    height: 32px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.puzzle-card.active .puzzle-marker {
+    background: var(--success);
+    width: 12px;
+    height: 12px;
+}
+
+.puzzle-coords {
+    padding: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--success);
+    font-weight: bold;
+}
+
+/* Detail Panel */
+.detail-panel {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 2px solid var(--accent);
+}
+
+.detail-panel h3 {
+    margin-bottom: 15px;
+    color: var(--accent);
+}
+
+.detail-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .detail-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.detail-map {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.detail-map img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-marker {
+    position: absolute;
+    width: 30px;
+    height: 30px;
     transform: translate(-50%, -50%);
     z-index: 10;
 }
 
-.result-marker img {
+.detail-marker img {
     width: 100%;
     height: 100%;
 }
 
-.result-info p {
-    margin-bottom: 10px;
+.detail-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
 }
 
-.result-info strong {
+.detail-info p {
+    font-size: 1rem;
+}
+
+.detail-info strong {
     color: var(--text-secondary);
+    margin-right: 10px;
 }
 
+/* Footer */
 footer {
     margin-top: 40px;
     padding: 20px;
