@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFXIV 藏寶圖查詢器 (繁中版)</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="https://xivapi.com/i/060000/060354_hr1.png" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FFXIV 藏寶圖查詢器</h1>
+            <p class="subtitle">繁體中文版 - 點擊地圖標記位置</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="map-select">選擇地圖區域：</label>
+                <select id="map-select">
+                    <option value="">-- 選擇地圖 --</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="item-select">藏寶圖類型：</label>
+                <select id="item-select">
+                    <option value="">-- 全部 --</option>
+                </select>
+            </div>
+            <button id="reset-btn" class="btn-reset">重置</button>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container" id="map-container">
+                <div class="map-placeholder">
+                    <p>請選擇地圖區域</p>
+                </div>
+                <img id="map-image" class="map-image hidden" alt="地圖">
+                <div id="map-markers" class="map-markers"></div>
+                <div id="selected-marker" class="selected-marker hidden">
+                    <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="寶藏標記">
+                </div>
+            </div>
+
+            <div class="treasure-list" id="treasure-list">
+                <h3>可能的藏寶點</h3>
+                <div class="treasure-items" id="treasure-items">
+                    <p class="no-selection">選擇地圖後將顯示藏寶點列表</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-panel hidden" id="result-panel">
+            <h3>選中的藏寶點</h3>
+            <div class="result-content">
+                <div class="result-map">
+                    <img id="result-map-image" alt="結果地圖">
+                    <div id="result-marker" class="result-marker">
+                        <img src="https://xivapi.com/i/060000/060354_hr1.png" alt="寶藏標記">
+                    </div>
+                </div>
+                <div class="result-info">
+                    <p><strong>地圖：</strong><span id="result-map-name"></span></p>
+                    <p><strong>座標：</strong><span id="result-coords"></span></p>
+                    <p><strong>藏寶圖類型：</strong><span id="result-item"></span></p>
+                    <p><strong>隊伍人數：</strong><span id="result-party"></span></p>
+                </div>
+            </div>
+            <button id="find-another-btn" class="btn-primary">尋找其他藏寶點</button>
+        </div>
+
+        <footer>
+            <p>資料來源：<a href="https://ffxivteamcraft.com" target="_blank">FFXIV Teamcraft</a></p>
+            <p>繁中翻譯：<a href="https://github.com/miaki3457/ffxiv-datamining-tc" target="_blank">ffxiv-datamining-tc</a></p>
+            <p><a href="https://github.com/cycleapple/xiv-tc-treasure-finder" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
