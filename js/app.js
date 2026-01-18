@@ -122,6 +122,9 @@ function renderTreasures() {
         marker.addEventListener('click', () => selectTreasure(treasure, index));
         mapMarkers.appendChild(marker);
 
+        // 計算謎題圖片偏移 (模擬 Teamcraft 的裁切效果)
+        const puzzleOffset = calcPuzzleOffset(treasure.coords, treasure.map);
+
         // 添加謎題卡片
         const card = document.createElement('div');
         card.className = 'puzzle-card';
@@ -130,8 +133,12 @@ function renderTreasures() {
         card.innerHTML = `
             <div class="puzzle-number">${index + 1}</div>
             <div class="puzzle-preview">
-                <img src="${MAP_DATA[treasure.map]?.image}" alt="預覽">
-                <div class="puzzle-marker" style="left: ${pos.x}%; top: ${pos.y}%;"></div>
+                <div class="puzzle-map-container">
+                    <img class="puzzle-map-image" src="${MAP_DATA[treasure.map]?.image}" alt="預覽"
+                         style="left: ${puzzleOffset.x}%; top: ${puzzleOffset.y}%;">
+                </div>
+                <div class="puzzle-frame"></div>
+                <div class="puzzle-marker"></div>
             </div>
             <div class="puzzle-coords">X: ${treasure.coords.x.toFixed(1)}, Y: ${treasure.coords.y.toFixed(1)}</div>
         `;
@@ -139,6 +146,26 @@ function renderTreasures() {
         card.addEventListener('click', () => selectTreasure(treasure, index));
         puzzleGrid.appendChild(card);
     });
+}
+
+// 計算謎題圖片偏移量 (讓藏寶點位於中央，使用百分比)
+function calcPuzzleOffset(coords, mapId) {
+    const map = MAP_DATA[mapId];
+    const sizeFactor = map?.size_factor || 100;
+    const scale = sizeFactor / 100;
+
+    // 遊戲座標轉換為百分比位置 (0-100)
+    const posX = ((coords.x - 1) / (41 * scale)) * 100;
+    const posY = ((coords.y - 1) / (41 * scale)) * 100;
+
+    // 圖片是容器的 15 倍 (1500%)
+    // 要讓 posX% 的點位於容器中央 (50%)
+    // 偏移公式: -(posX * 15) + 50
+    const imageScale = 15;
+    const offsetX = -(posX * imageScale) + 50;
+    const offsetY = -(posY * imageScale) + 50;
+
+    return { x: offsetX, y: offsetY };
 }
 
 // 遊戲座標轉換為地圖百分比位置

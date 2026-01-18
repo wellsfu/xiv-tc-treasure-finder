@@ -353,12 +353,12 @@ header h1 {
 .puzzle-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
 }
 
 @media (max-width: 1000px) {
     .puzzle-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 }
 
@@ -407,28 +407,67 @@ header h1 {
     width: 100%;
     aspect-ratio: 1;
     overflow: hidden;
+    background: var(--bg-primary);
 }
 
-.puzzle-preview img {
+.puzzle-map-container {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    width: 90%;
+    height: 90%;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.puzzle-map-image {
+    position: absolute;
+    /* 圖片大小是容器的 15 倍，讓裁切效果更明顯 */
+    width: 1500%;
+    height: 1500%;
+    max-width: none;
+    /* 位置由 JS 動態設定 (使用百分比) */
+}
+
+.puzzle-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    border: 3px solid var(--border);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.puzzle-card:hover .puzzle-frame {
+    border-color: var(--accent);
+}
+
+.puzzle-card.active .puzzle-frame {
+    border-color: var(--success);
 }
 
 .puzzle-marker {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
     background: var(--accent);
     border: 2px solid white;
     border-radius: 50%;
     transform: translate(-50%, -50%);
+    z-index: 3;
+    box-shadow: 0 0 8px rgba(233, 69, 96, 0.8);
 }
 
 .puzzle-card.active .puzzle-marker {
     background: var(--success);
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
+    box-shadow: 0 0 10px rgba(78, 204, 163, 0.8);
 }
 
 .puzzle-coords {
