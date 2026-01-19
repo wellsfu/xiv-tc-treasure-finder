@@ -271,7 +271,7 @@ const PartyService = (function() {
         return String(id).replace(/\./g, '_');
     }
 
-    // 新增藏寶圖到隊伍
+    // 新增藏寶圖到隊伍 (允許重複新增同一藏寶點)
     async function addTreasure(treasure) {
         const sdk = window.FirebaseSDK;
         if (!sdk) throw new Error('Firebase SDK 尚未載入');
@@ -281,14 +281,6 @@ const PartyService = (function() {
         }
 
         const userId = AuthService.getUserId();
-        const firebaseKey = toFirebaseKey(treasure.id);
-
-        // 檢查藏寶圖是否已存在
-        const treasureRef = getRef(`parties/${currentPartyCode}/treasures/${firebaseKey}`);
-        const existing = await sdk.get(treasureRef);
-        if (existing.exists()) {
-            throw new Error('此藏寶圖已在清單中');
-        }
 
         // 取得目前最大順序
         const treasuresRef = getRef(`parties/${currentPartyCode}/treasures`);
@@ -314,8 +306,9 @@ const PartyService = (function() {
             completed: false
         };
 
-        // 使用轉換後的 key (避免重複)
-        await sdk.set(treasureRef, treasureData);
+        // 使用 push 生成唯一 key，允許同一藏寶點被多次新增
+        const newTreasureRef = await sdk.push(treasuresRef);
+        await sdk.set(newTreasureRef, treasureData);
 
         // 延長隊伍過期時間 (活動時更新)
         const newExpiresAt = Date.now() + PARTY_EXPIRY_MS;

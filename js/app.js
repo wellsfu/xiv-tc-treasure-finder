@@ -1168,7 +1168,6 @@ function updatePartyStatusModal() {
 // 更新藏寶圖卡片的隊伍狀態
 function updateTreasureCardsPartyStatus() {
     const inParty = PartyService.isInParty();
-    const addedIds = new Set(partyTreasures.map(t => t.id));
 
     document.querySelectorAll('.treasure-map').forEach(card => {
         const treasureId = card.dataset.treasureId;
@@ -1191,17 +1190,7 @@ function updateTreasureCardsPartyStatus() {
                 });
                 card.appendChild(btn);
             }
-
-            // 更新按鈕狀態
-            if (addedIds.has(treasureId)) {
-                btn.classList.add('added');
-                btn.disabled = true;
-                btn.title = '已在隊伍清單中';
-            } else {
-                btn.classList.remove('added');
-                btn.disabled = false;
-                btn.title = '加入隊伍清單';
-            }
+            // 按鈕永遠可用 (允許重複新增)
         } else {
             // 如果不在隊伍中，移除按鈕
             if (btn) {

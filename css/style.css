@@ -1176,7 +1176,7 @@ footer a:hover {
     width: 32px;
     height: 32px;
     border-radius: 4px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(90, 156, 105, 0.85);
     border: none;
     color: white;
     cursor: pointer;
@@ -1189,21 +1189,6 @@ footer a:hover {
 .add-to-party-btn:hover {
     background: var(--success);
     transform: scale(1.1);
-}
-
-.add-to-party-btn.added {
-    background: var(--success);
-}
-
-.add-to-party-btn.added::after {
-    content: '✓';
-    position: absolute;
-    font-size: 12px;
-}
-
-.add-to-party-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
 }
 
 /* Firebase 未設定警告 */
