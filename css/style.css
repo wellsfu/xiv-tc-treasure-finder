@@ -298,6 +298,19 @@ header h1 {
     margin-bottom: 4px;
 }
 
+.map-letter {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+}
+
 .map-btn-count {
     font-size: 0.85rem;
     color: var(--accent-gold);

@@ -57,36 +57,47 @@ function selectGrade(grade) {
     showStep('map');
 }
 
+// 字母編號轉換
+function indexToLetter(index) {
+    return String.fromCharCode(65 + index); // A=65
+}
+
 // 渲染地圖按鈕
 function renderMapButtons() {
     mapGrid.innerHTML = '';
 
     const maps = getMapsForGrade(selectedGrade);
 
-    maps.forEach(map => {
+    maps.forEach((map, index) => {
+        const letter = indexToLetter(index);
         const btn = document.createElement('button');
         btn.className = 'map-btn';
         btn.dataset.mapId = map.id;
+        btn.dataset.mapLetter = letter;
 
         btn.innerHTML = `
             <div class="map-btn-image">
                 <img src="${map.image}" alt="${map.name}" loading="lazy">
             </div>
             <div class="map-btn-info">
-                <span class="map-btn-name">${map.name}</span>
+                <span class="map-btn-name"><span class="map-letter">${letter}</span> ${map.name}</span>
                 <span class="map-btn-count">${map.count} 個藏寶點</span>
             </div>
         `;
 
-        btn.addEventListener('click', () => selectMap(map.id));
+        btn.addEventListener('click', () => selectMap(map.id, letter));
         mapGrid.appendChild(btn);
     });
 }
 
+// 儲存目前選擇的地圖字母
+let selectedMapLetter = null;
+
 // 選擇地圖
-function selectMap(mapId) {
+function selectMap(mapId, letter) {
     selectedMapId = mapId;
-    selectedMapName.textContent = getMapName(mapId);
+    selectedMapLetter = letter;
+    selectedMapName.textContent = `${letter} ${getMapName(mapId)}`;
 
     const map = MAP_DATA[mapId];
     if (map) {
