@@ -440,6 +440,40 @@ header h1 {
     gap: 6px;
 }
 
+/* 複製座標按鈕 - 右下角 */
+.copy-pos-btn {
+    position: absolute;
+    z-index: 5;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.copy-pos-btn:hover {
+    background: var(--accent);
+    transform: scale(1.1);
+}
+
+.copy-pos-btn.copied {
+    background: var(--success);
+}
+
+.copy-pos-btn.copied::after {
+    content: '✓';
+    position: absolute;
+    font-size: 12px;
+}
+
 .player-icon {
     width: 20px;
     height: 20px;

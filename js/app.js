@@ -154,9 +154,30 @@ function renderTreasures() {
                 </div>
                 <span class="party-size shadow-text">${partySize}</span>
             </div>
+            <button class="copy-pos-btn" data-pos="/pos ${treasure.coords.x.toFixed(1)} ${treasure.coords.y.toFixed(1)}" title="複製座標指令">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
+            </button>
         `;
 
-        card.addEventListener('click', () => selectTreasure(treasure, index));
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.copy-pos-btn')) {
+                selectTreasure(treasure, index);
+            }
+        });
+
+        // 複製座標按鈕事件
+        const copyBtn = card.querySelector('.copy-pos-btn');
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const posCmd = copyBtn.dataset.pos;
+            navigator.clipboard.writeText(posCmd).then(() => {
+                copyBtn.classList.add('copied');
+                setTimeout(() => copyBtn.classList.remove('copied'), 1500);
+            });
+        });
+
         puzzleGrid.appendChild(card);
     });
 }
