@@ -322,13 +322,25 @@ function bindEvents() {
 // 隊伍功能
 // ============================================
 
-// 初始化隊伍系統
+// 初始化隊伍系統 (延遲連線模式 - 只綁定事件，不連接 Firebase)
 async function initializePartySystem() {
     // 檢查 Firebase 是否已設定
     if (!window.FirebaseConfig || !window.FirebaseConfig.isConfigured()) {
         console.log('Firebase 尚未設定，隊伍功能將不可用');
         disablePartyButtons();
         return;
+    }
+
+    // 只綁定事件，不初始化 Firebase 連線
+    // Firebase 連線會在使用者建立/加入隊伍時才建立
+    bindPartyEvents();
+    console.log('隊伍系統就緒 (延遲連線模式)');
+}
+
+// 確保 Firebase 已連線 (延遲初始化)
+async function ensureFirebaseConnected() {
+    if (isFirebaseReady) {
+        return true;
     }
 
     try {
@@ -342,16 +354,14 @@ async function initializePartySystem() {
             // 設定同步回調
             setupSyncCallbacks();
 
-            // 綁定隊伍事件
-            bindPartyEvents();
-
-            console.log('隊伍系統初始化完成');
+            console.log('Firebase 連線已建立');
+            return true;
         } else {
-            disablePartyButtons();
+            return false;
         }
     } catch (error) {
-        console.error('隊伍系統初始化失敗:', error);
-        disablePartyButtons();
+        console.error('Firebase 連線失敗:', error);
+        return false;
     }
 }
 
@@ -549,11 +559,18 @@ async function handleCreateParty() {
     const nicknameInput = document.getElementById('create-nickname');
 
     btn.disabled = true;
-    btn.textContent = '建立中...';
+    btn.textContent = '連線中...';
     errorEl.classList.add('hidden');
     resultEl.classList.add('hidden');
 
     try {
+        // 延遲連線：確保 Firebase 已連線
+        const connected = await ensureFirebaseConnected();
+        if (!connected) {
+            throw new Error('無法連接伺服器，請稍後再試');
+        }
+
+        btn.textContent = '建立中...';
         const nickname = nicknameInput.value.trim() || null;
         const partyCode = await PartyService.createParty(nickname);
 
@@ -592,10 +609,17 @@ async function handleJoinParty() {
     }
 
     btn.disabled = true;
-    btn.textContent = '加入中...';
+    btn.textContent = '連線中...';
     errorEl.classList.add('hidden');
 
     try {
+        // 延遲連線：確保 Firebase 已連線
+        const connected = await ensureFirebaseConnected();
+        if (!connected) {
+            throw new Error('無法連接伺服器，請稍後再試');
+        }
+
+        btn.textContent = '加入中...';
         const nickname = nicknameInput.value.trim() || null;
         await PartyService.joinParty(code, nickname);
 
