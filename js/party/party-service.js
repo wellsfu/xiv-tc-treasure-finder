@@ -319,8 +319,8 @@ const PartyService = (function() {
         return treasure.id;
     }
 
-    // 從隊伍移除藏寶圖
-    async function removeTreasure(treasureId) {
+    // 從隊伍移除藏寶圖 (使用 Firebase key)
+    async function removeTreasure(firebaseKey) {
         const sdk = window.FirebaseSDK;
         if (!sdk) throw new Error('Firebase SDK 尚未載入');
 
@@ -328,15 +328,14 @@ const PartyService = (function() {
             throw new Error('尚未加入隊伍');
         }
 
-        const firebaseKey = toFirebaseKey(treasureId);
         const treasureRef = getRef(`parties/${currentPartyCode}/treasures/${firebaseKey}`);
         await sdk.remove(treasureRef);
 
-        console.log(`已移除藏寶圖: ${treasureId}`);
+        console.log(`已移除藏寶圖: ${firebaseKey}`);
     }
 
-    // 切換藏寶圖完成狀態
-    async function toggleTreasureComplete(treasureId) {
+    // 切換藏寶圖完成狀態 (使用 Firebase key)
+    async function toggleTreasureComplete(firebaseKey) {
         const sdk = window.FirebaseSDK;
         if (!sdk) throw new Error('Firebase SDK 尚未載入');
 
@@ -344,19 +343,18 @@ const PartyService = (function() {
             throw new Error('尚未加入隊伍');
         }
 
-        const firebaseKey = toFirebaseKey(treasureId);
         const treasureRef = getRef(`parties/${currentPartyCode}/treasures/${firebaseKey}`);
         const snapshot = await sdk.get(treasureRef);
 
         if (snapshot.exists()) {
             const current = snapshot.val().completed || false;
             await sdk.set(getRef(`parties/${currentPartyCode}/treasures/${firebaseKey}/completed`), !current);
-            console.log(`藏寶圖 ${treasureId} 完成狀態: ${!current}`);
+            console.log(`藏寶圖 ${firebaseKey} 完成狀態: ${!current}`);
         }
     }
 
-    // 更新藏寶圖順序
-    async function updateTreasureOrder(treasureId, newOrder) {
+    // 更新藏寶圖順序 (使用 Firebase key)
+    async function updateTreasureOrder(firebaseKey, newOrder) {
         const sdk = window.FirebaseSDK;
         if (!sdk) throw new Error('Firebase SDK 尚未載入');
 
@@ -364,12 +362,11 @@ const PartyService = (function() {
             throw new Error('尚未加入隊伍');
         }
 
-        const firebaseKey = toFirebaseKey(treasureId);
         await sdk.set(getRef(`parties/${currentPartyCode}/treasures/${firebaseKey}/order`), newOrder);
     }
 
-    // 交換兩個藏寶圖的順序 (使用 Transaction 確保並發安全)
-    async function swapTreasureOrder(treasureId1, treasureId2, order1, order2) {
+    // 交換兩個藏寶圖的順序 (使用 Transaction 確保並發安全，使用 firebaseKey)
+    async function swapTreasureOrder(firebaseKey1, firebaseKey2) {
         const sdk = window.FirebaseSDK;
         if (!sdk) throw new Error('Firebase SDK 尚未載入');
 
@@ -377,18 +374,16 @@ const PartyService = (function() {
             throw new Error('尚未加入隊伍');
         }
 
-        const key1 = toFirebaseKey(treasureId1);
-        const key2 = toFirebaseKey(treasureId2);
         const treasuresRef = getRef(`parties/${currentPartyCode}/treasures`);
 
         // 使用 Transaction 確保並發編輯安全
         await sdk.runTransaction(treasuresRef, (treasures) => {
             if (!treasures) return treasures;
 
-            if (treasures[key1] && treasures[key2]) {
-                const temp = treasures[key1].order;
-                treasures[key1].order = treasures[key2].order;
-                treasures[key2].order = temp;
+            if (treasures[firebaseKey1] && treasures[firebaseKey2]) {
+                const temp = treasures[firebaseKey1].order;
+                treasures[firebaseKey1].order = treasures[firebaseKey2].order;
+                treasures[firebaseKey2].order = temp;
             }
 
             return treasures;

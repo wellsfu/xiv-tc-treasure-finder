@@ -70,7 +70,11 @@ const SyncService = (function() {
         const treasuresRef = getRef(`parties/${partyCode}/treasures`);
         sdk.onValue(treasuresRef, (snapshot) => {
             const treasures = snapshot.val() || {};
-            const treasureArray = Object.values(treasures);
+            // 將 Firebase key 加入每個藏寶圖物件中
+            const treasureArray = Object.entries(treasures).map(([key, value]) => ({
+                ...value,
+                firebaseKey: key
+            }));
             console.log('藏寶圖更新:', treasureArray.length, '個');
             if (callbacks.onTreasuresChange) {
                 callbacks.onTreasuresChange(treasureArray);

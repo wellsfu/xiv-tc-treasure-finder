@@ -940,13 +940,14 @@ function updateRouteListUI() {
 
     routeItems.innerHTML = sortedTreasures.map((treasure, index) => {
         const mapName = getMapName(treasure.mapId);
-        const isActive = selectedRouteItem === treasure.id;
+        const firebaseKey = treasure.firebaseKey;
+        const isActive = selectedRouteItem === firebaseKey;
         const isCompleted = treasure.completed;
 
         return `
             <div class="route-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
-                 data-treasure-id="${treasure.id}"
-                 onclick="selectRouteItem('${treasure.id}')">
+                 data-firebase-key="${firebaseKey}"
+                 onclick="selectRouteItem('${firebaseKey}')">
                 <div class="route-item-order">
                     <div class="route-item-number"><span>${index + 1}</span></div>
                 </div>
@@ -959,10 +960,10 @@ function updateRouteListUI() {
                 </div>
                 <div class="route-item-actions">
                     <div class="route-order-btns">
-                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'up')" title="上移">▲</button>
-                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'down')" title="下移">▼</button>
+                        <button onclick="event.stopPropagation(); moveRouteItem('${firebaseKey}', 'up')" title="上移">▲</button>
+                        <button onclick="event.stopPropagation(); moveRouteItem('${firebaseKey}', 'down')" title="下移">▼</button>
                     </div>
-                    <button class="btn-complete" onclick="event.stopPropagation(); toggleRouteComplete('${treasure.id}')" title="${isCompleted ? '標記未完成' : '標記完成'}">
+                    <button class="btn-complete" onclick="event.stopPropagation(); toggleRouteComplete('${firebaseKey}')" title="${isCompleted ? '標記未完成' : '標記完成'}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
@@ -972,7 +973,7 @@ function updateRouteListUI() {
                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                         </svg>
                     </button>
-                    <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${treasure.id}')" title="移除">
+                    <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${firebaseKey}')" title="移除">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                         </svg>
@@ -1021,14 +1022,15 @@ function updateMapPreviewUI() {
         // 繪製標記
         markersContainer.innerHTML = treasuresOnMap.map((treasure, idx) => {
             const pos = coordsToPercent(treasure.coords, treasure.mapId);
-            const globalIndex = partyTreasures.sort((a, b) => (a.order || 0) - (b.order || 0)).findIndex(t => t.id === treasure.id) + 1;
-            const isActive = selectedRouteItem === treasure.id;
+            const firebaseKey = treasure.firebaseKey;
+            const globalIndex = partyTreasures.sort((a, b) => (a.order || 0) - (b.order || 0)).findIndex(t => t.firebaseKey === firebaseKey) + 1;
+            const isActive = selectedRouteItem === firebaseKey;
             const isCompleted = treasure.completed;
 
             return `
                 <div class="preview-marker ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
                      style="left: ${pos.x}%; top: ${pos.y}%;"
-                     onclick="selectRouteItem('${treasure.id}')"
+                     onclick="selectRouteItem('${firebaseKey}')"
                      title="${getMapName(treasure.mapId)} - X: ${treasure.coords.x.toFixed(1)} Y: ${treasure.coords.y.toFixed(1)}">
                     ${globalIndex}
                 </div>
@@ -1041,7 +1043,7 @@ function updateMapPreviewUI() {
 
     // 更新資訊
     if (selectedRouteItem) {
-        const treasure = partyTreasures.find(t => t.id === selectedRouteItem);
+        const treasure = partyTreasures.find(t => t.firebaseKey === selectedRouteItem);
         if (treasure) {
             previewInfo.innerHTML = `
                 <strong>${getMapName(treasure.mapId)}</strong><br>
@@ -1054,14 +1056,14 @@ function updateMapPreviewUI() {
     }
 }
 
-// 選擇路線項目
-function selectRouteItem(treasureId) {
-    selectedRouteItem = treasureId;
+// 選擇路線項目 (使用 firebaseKey)
+function selectRouteItem(firebaseKey) {
+    selectedRouteItem = firebaseKey;
     updateRouteListUI();
     updateMapPreviewUI();
 
     // 如果該藏寶圖在不同地圖，切換地圖顯示
-    const treasure = partyTreasures.find(t => t.id === treasureId);
+    const treasure = partyTreasures.find(t => t.firebaseKey === firebaseKey);
     if (treasure) {
         const mapSelect = document.getElementById('preview-map-select');
         if (mapSelect && mapSelect.value != treasure.mapId) {
@@ -1071,10 +1073,10 @@ function selectRouteItem(treasureId) {
     }
 }
 
-// 移動路線項目
-async function moveRouteItem(treasureId, direction) {
+// 移動路線項目 (使用 firebaseKey)
+async function moveRouteItem(firebaseKey, direction) {
     const sortedTreasures = [...partyTreasures].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const currentIndex = sortedTreasures.findIndex(t => t.id === treasureId);
+    const currentIndex = sortedTreasures.findIndex(t => t.firebaseKey === firebaseKey);
 
     if (currentIndex === -1) return;
 
@@ -1086,16 +1088,16 @@ async function moveRouteItem(treasureId, direction) {
     const target = sortedTreasures[targetIndex];
 
     try {
-        await PartyService.swapTreasureOrder(current.id, target.id, current.order, target.order);
+        await PartyService.swapTreasureOrder(current.firebaseKey, target.firebaseKey);
     } catch (error) {
         console.error('移動失敗:', error);
     }
 }
 
-// 切換完成狀態
-async function toggleRouteComplete(treasureId) {
+// 切換完成狀態 (使用 firebaseKey)
+async function toggleRouteComplete(firebaseKey) {
     try {
-        await PartyService.toggleTreasureComplete(treasureId);
+        await PartyService.toggleTreasureComplete(firebaseKey);
     } catch (error) {
         console.error('切換狀態失敗:', error);
     }
@@ -1216,10 +1218,10 @@ async function addTreasureToParty(treasureId) {
     }
 }
 
-// 從隊伍移除藏寶圖
-async function removeTreasureFromParty(treasureId) {
+// 從隊伍移除藏寶圖 (使用 firebaseKey)
+async function removeTreasureFromParty(firebaseKey) {
     try {
-        await PartyService.removeTreasure(treasureId);
+        await PartyService.removeTreasure(firebaseKey);
     } catch (error) {
         alert('移除失敗: ' + error.message);
     }
