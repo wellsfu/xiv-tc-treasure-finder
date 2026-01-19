@@ -932,7 +932,7 @@ function updateRouteListUI() {
         routeItems.innerHTML = `
             <div class="route-empty">
                 <p>尚未新增藏寶圖</p>
-                <p class="hint">點擊「新增藏寶圖」開始</p>
+                <p class="hint">從下方選擇藏寶圖後點擊 + 加入</p>
             </div>
         `;
         return;
@@ -949,10 +949,6 @@ function updateRouteListUI() {
                  onclick="selectRouteItem('${treasure.id}')">
                 <div class="route-item-order">
                     <div class="route-item-number"><span>${index + 1}</span></div>
-                    <div class="route-order-btns">
-                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'up')" title="上移">▲</button>
-                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'down')" title="下移">▼</button>
-                    </div>
                 </div>
                 <div class="route-item-info">
                     <div class="route-item-map">${escapeHtml(mapName)}</div>
@@ -962,6 +958,10 @@ function updateRouteListUI() {
                     </div>
                 </div>
                 <div class="route-item-actions">
+                    <div class="route-order-btns">
+                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'up')" title="上移">▲</button>
+                        <button onclick="event.stopPropagation(); moveRouteItem('${treasure.id}', 'down')" title="下移">▼</button>
+                    </div>
                     <button class="btn-complete" onclick="event.stopPropagation(); toggleRouteComplete('${treasure.id}')" title="${isCompleted ? '標記未完成' : '標記完成'}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
