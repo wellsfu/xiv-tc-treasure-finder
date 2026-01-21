@@ -1606,6 +1606,11 @@ footer a:hover {
     background: var(--error);
 }
 
+.route-item-actions button.btn-copy-coords-party.copied {
+    background: var(--success);
+    color: white;
+}
+
 /* 地圖預覽 */
 .party-map-preview {
     background: var(--bg-secondary);

@@ -996,7 +996,7 @@ function updateRouteListUI() {
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
                     </button>
-                    <button class="btn-copy-coords-party" onclick="event.stopPropagation(); copyPartyCoords('${escapeHtml(mapName)}', '${treasure.coords.x.toFixed(1)}', '${treasure.coords.y.toFixed(1)}', '${nearestAetheryte ? escapeHtml(nearestAetheryte.name) : ''}')" title="複製座標">
+                    <button class="btn-copy-coords-party" onclick="event.stopPropagation(); copyPartyCoords(this, '${escapeHtml(mapName)}', '${treasure.coords.x.toFixed(1)}', '${treasure.coords.y.toFixed(1)}', '${nearestAetheryte ? escapeHtml(nearestAetheryte.name) : ''}')" title="複製座標">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                         </svg>
@@ -1141,13 +1141,14 @@ function copyTreasureCoords(x, y) {
 }
 
 // 複製組隊模式座標 (含地圖名稱和傳送點)
-function copyPartyCoords(mapName, x, y, aetheryteName) {
+function copyPartyCoords(btn, mapName, x, y, aetheryteName) {
     let text = `/p [${mapName}]:(${x}, ${y})`;
     if (aetheryteName) {
         text += ` | 最近傳送水晶:[${aetheryteName}]`;
     }
     navigator.clipboard.writeText(text).then(() => {
-        console.log('已複製座標:', text);
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1500);
     });
 }
 
