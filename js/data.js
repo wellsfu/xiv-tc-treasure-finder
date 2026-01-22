@@ -176,162 +176,100 @@ const NODE_TYPE_NAMES = {
     "良材": "良材"        // Mature Tree (Logging)
 };
 
-// 採集點資料 (Key = itemId，對應 GRADE_DATA 中的 itemId)
-const GATHERING_NODES = {
-    // G17 - 陳舊的獰豹革地圖 (Lv.100)
-    43557: [
-        { job: "miner", nodeType: "礦脈", zoneId: 4508, coords: { x: 13, y: 9 }, level: 100 },
-        { job: "miner", nodeType: "礦脈", zoneId: 4509, coords: { x: 29, y: 22 }, level: 100 },
-        { job: "miner", nodeType: "石場", zoneId: 4508, coords: { x: 17, y: 32 }, level: 100 },
-        { job: "miner", nodeType: "石場", zoneId: 4507, coords: { x: 22, y: 15 }, level: 100 },
-        { job: "botanist", nodeType: "良材", zoneId: 4508, coords: { x: 12, y: 22 }, level: 100 },
-        { job: "botanist", nodeType: "良材", zoneId: 4509, coords: { x: 32, y: 28 }, level: 100 },
-        { job: "botanist", nodeType: "草叢", zoneId: 4508, coords: { x: 25.3, y: 34 }, level: 100 },
-        { job: "botanist", nodeType: "草叢", zoneId: 4507, coords: { x: 18, y: 27 }, level: 100 }
+// GatheringType 對照表 (來自 datamining)
+// Type 0-3 對應採集職業和節點類型
+const GATHERING_TYPE_INFO = {
+    0: { job: "miner", nodeType: "礦脈" },     // Mining (礦脈)
+    1: { job: "miner", nodeType: "石場" },     // Quarrying (石場)
+    2: { job: "botanist", nodeType: "良材" },  // Logging (良材)
+    3: { job: "botanist", nodeType: "草叢" }   // Harvesting (草叢)
+};
+
+// 採集點資料 - 按採集等級分類
+// 藏寶圖按採集等級掉落，同等級的藏寶圖共享相同的採集點
+const GATHERING_NODES_BY_LEVEL = {
+    // Lv.100 - 黃金遺產 (7.0) - 來源: consolegameswiki
+    // 區域: 夏勞尼荒野、遺產之地、亞克特爾樹海
+    100: [
+        // 採掘師 - 礦脈 (gatheringType: 0)
+        { gatheringType: 0, zoneId: 4508, coords: { x: 13, y: 9 } },     // 夏勞尼荒野 - Eshceyaani Wilds
+        { gatheringType: 0, zoneId: 4509, coords: { x: 29, y: 22 } },    // 遺產之地 - East Yyasulani
+        { gatheringType: 0, zoneId: 4509, coords: { x: 15, y: 23 } },    // 遺產之地 - Archeo Alexandria
+        // 園藝師 - 良材 (gatheringType: 2)
+        { gatheringType: 2, zoneId: 4508, coords: { x: 12, y: 22 } },    // 夏勞尼荒野 - Eshceyaani Wilds
+        { gatheringType: 2, zoneId: 4509, coords: { x: 32, y: 28 } },    // 遺產之地 - East Yyasulani
+        // 園藝師 - 草叢 (gatheringType: 3)
+        { gatheringType: 3, zoneId: 4508, coords: { x: 25.3, y: 34 } }   // 夏勞尼荒野 - Yawtanane Grasslands
     ],
 
-    // G16 - 陳舊的銀狼革地圖 (Lv.100)
-    43556: [
-        { job: "miner", nodeType: "礦脈", zoneId: 4508, coords: { x: 13, y: 9 }, level: 100 },
-        { job: "miner", nodeType: "礦脈", zoneId: 4509, coords: { x: 29, y: 22 }, level: 100 },
-        { job: "miner", nodeType: "石場", zoneId: 4508, coords: { x: 17, y: 32 }, level: 100 },
-        { job: "miner", nodeType: "石場", zoneId: 4507, coords: { x: 22, y: 15 }, level: 100 },
-        { job: "botanist", nodeType: "良材", zoneId: 4508, coords: { x: 12, y: 22 }, level: 100 },
-        { job: "botanist", nodeType: "良材", zoneId: 4509, coords: { x: 32, y: 28 }, level: 100 },
-        { job: "botanist", nodeType: "草叢", zoneId: 4508, coords: { x: 25.3, y: 34 }, level: 100 },
-        { job: "botanist", nodeType: "草叢", zoneId: 4507, coords: { x: 18, y: 27 }, level: 100 }
+    // Lv.90 - 曉月終焉 (6.0/6.3) - 來源: consolegameswiki
+    // 6.0 區域: 迷津、薩維奈島、嘆息海、天外天垓
+    // 6.3 區域: 厄爾庇斯
+    90: [
+        // 厄爾庇斯 G15 (6.3)
+        { gatheringType: 1, zoneId: 3713, coords: { x: 12.0, y: 18.4 } }, // 石場 - Rumination's Ramble
+        { gatheringType: 3, zoneId: 3713, coords: { x: 20.6, y: 24.9 } }, // 草叢 - Philomythes Notos
+        // 6.0 基礎區域 G13/G14 - 迷津 (Labyrinthos)
+        { gatheringType: 0, zoneId: 3708, coords: { x: 18.5, y: 12.3 } }, // 礦脈 - Hollow of the Flesh (Ostrakon Tria)
+        { gatheringType: 1, zoneId: 3708, coords: { x: 21.5, y: 33.4 } }, // 石場 - The Vitrified Fort (Ostrakon Deka-okto)
+        { gatheringType: 2, zoneId: 3708, coords: { x: 7.5, y: 21.6 } },  // 良材 - Ahm Nohl (Ostrakon Deka-okto)
+        { gatheringType: 3, zoneId: 3708, coords: { x: 14.2, y: 28.6 } }  // 草叢 - Reah Tahra (Ostrakon Deka-okto)
     ],
 
-    // G15 - 陳舊的蛇牛革地圖 (Lv.90)
-    39591: [
-        { job: "miner", nodeType: "礦脈", zoneId: 3713, coords: { x: 24, y: 27 }, level: 90 },
-        { job: "miner", nodeType: "礦脈", zoneId: 3713, coords: { x: 31, y: 19 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3713, coords: { x: 18, y: 12 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3713, coords: { x: 26, y: 8 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3713, coords: { x: 22, y: 31 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3713, coords: { x: 12, y: 21 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3713, coords: { x: 28, y: 15 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3713, coords: { x: 15, y: 28 }, level: 90 }
+    // Lv.80 - 漆黑秘境 (5.0) - 來源: consolegameswiki
+    // 區域: 雷克蘭德、珂露西亞島、安穆·艾蘭、伊爾美格、拉凱提卡大森林、黑風海
+    80: [
+        // 採掘師 - 礦脈 (gatheringType: 0)
+        { gatheringType: 0, zoneId: 2953, coords: { x: 35.4, y: 14.6 } }, // 雷克蘭德 - The Church of the First Light
+        { gatheringType: 0, zoneId: 2957, coords: { x: 25.7, y: 28.9 } }, // 拉凱提卡大森林 - The Wild Fete
+        // 採掘師 - 石場 (gatheringType: 1)
+        { gatheringType: 1, zoneId: 2954, coords: { x: 22.3, y: 18.2 } }, // 珂露西亞島 - Amity
+        { gatheringType: 1, zoneId: 2955, coords: { x: 16.6, y: 11.6 } }, // 安穆·艾蘭 - Mord Souq
+        // 園藝師 - 良材 (gatheringType: 2)
+        { gatheringType: 2, zoneId: 2953, coords: { x: 12.3, y: 10.5 } }, // 雷克蘭德 - Hare Among Giants
+        { gatheringType: 2, zoneId: 2955, coords: { x: 16.1, y: 30.0 } }, // 安穆·艾蘭 - The Ladle
+        // 園藝師 - 草叢 (gatheringType: 3)
+        { gatheringType: 3, zoneId: 2953, coords: { x: 25.2, y: 29.9 } }, // 雷克蘭德 - Weed
+        { gatheringType: 3, zoneId: 2954, coords: { x: 13.7, y: 14.4 } }, // 珂露西亞島 - The Scree
+        { gatheringType: 3, zoneId: 2957, coords: { x: 26.7, y: 31.1 } }  // 拉凱提卡大森林 - The Wild Fete
     ],
 
-    // G14 - 陳舊的金毗羅鱷革地圖 (Lv.90)
-    36612: [
-        { job: "miner", nodeType: "礦脈", zoneId: 3708, coords: { x: 19, y: 22 }, level: 90 },
-        { job: "miner", nodeType: "礦脈", zoneId: 3709, coords: { x: 23, y: 17 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3711, coords: { x: 26, y: 28 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3712, coords: { x: 15, y: 31 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3708, coords: { x: 28, y: 35 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3709, coords: { x: 17, y: 25 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3711, coords: { x: 21, y: 19 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3712, coords: { x: 24, y: 14 }, level: 90 }
+    // Lv.70 - 紅蓮解放者 (4.0) - 來源: consolegameswiki
+    // 區域: 基拉巴尼亞邊區、基拉巴尼亞山區、基拉巴尼亞湖區、紅玉海、延夏、太陽神草原
+    70: [
+        // 採掘師 - 礦脈 (gatheringType: 0)
+        { gatheringType: 0, zoneId: 2407, coords: { x: 37.6, y: 19.8 } }, // 基拉巴尼亞山區 - Unseen Spirits Laughing
+        { gatheringType: 0, zoneId: 2408, coords: { x: 11.4, y: 16.6 } }, // 基拉巴尼亞湖區 - The High Bank
+        // 採掘師 - 石場 (gatheringType: 1)
+        { gatheringType: 1, zoneId: 2411, coords: { x: 29.3, y: 15.3 } }, // 太陽神草原 - Onsal Hakair
+        // 園藝師 - 良材 (gatheringType: 2)
+        { gatheringType: 2, zoneId: 2406, coords: { x: 9, y: 29.9 } },    // 基拉巴尼亞邊區 - Dimwold
+        { gatheringType: 2, zoneId: 2408, coords: { x: 28.3, y: 9.8 } },  // 基拉巴尼亞湖區 - Abalathia's Skull
+        // 園藝師 - 草叢 (gatheringType: 3)
+        { gatheringType: 3, zoneId: 2407, coords: { x: 26.5, y: 31.2 } }, // 基拉巴尼亞山區 - Mount Yorn
+        { gatheringType: 3, zoneId: 2409, coords: { x: 12.8, y: 14.3 } }, // 紅玉海 - Rasen Kaikyo
+        { gatheringType: 3, zoneId: 2410, coords: { x: 22.3, y: 12 } },   // 延夏 - Doma
+        { gatheringType: 3, zoneId: 2411, coords: { x: 15.8, y: 28 } }    // 太陽神草原 - Nhaama's Retreat
     ],
 
-    // G13 - 陳舊的賽加羚羊革地圖 (Lv.90)
-    36611: [
-        { job: "miner", nodeType: "礦脈", zoneId: 3708, coords: { x: 19, y: 22 }, level: 90 },
-        { job: "miner", nodeType: "礦脈", zoneId: 3709, coords: { x: 23, y: 17 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3711, coords: { x: 26, y: 28 }, level: 90 },
-        { job: "miner", nodeType: "石場", zoneId: 3712, coords: { x: 15, y: 31 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3708, coords: { x: 28, y: 35 }, level: 90 },
-        { job: "botanist", nodeType: "良材", zoneId: 3709, coords: { x: 17, y: 25 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3711, coords: { x: 21, y: 19 }, level: 90 },
-        { job: "botanist", nodeType: "草叢", zoneId: 3712, coords: { x: 24, y: 14 }, level: 90 }
-    ],
-
-    // G12 - 陳舊的纏尾蛟革地圖 (Lv.80)
-    26745: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2953, coords: { x: 27, y: 19 }, level: 80 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2954, coords: { x: 22, y: 25 }, level: 80 },
-        { job: "miner", nodeType: "石場", zoneId: 2955, coords: { x: 17, y: 13 }, level: 80 },
-        { job: "miner", nodeType: "石場", zoneId: 2956, coords: { x: 31, y: 22 }, level: 80 },
-        { job: "botanist", nodeType: "良材", zoneId: 2957, coords: { x: 24, y: 28 }, level: 80 },
-        { job: "botanist", nodeType: "良材", zoneId: 2958, coords: { x: 19, y: 16 }, level: 80 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2953, coords: { x: 14, y: 21 }, level: 80 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2954, coords: { x: 29, y: 11 }, level: 80 }
-    ],
-
-    // G11 - 陳舊的綠飄龍革地圖 (Lv.80)
-    26744: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2953, coords: { x: 27, y: 19 }, level: 80 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2954, coords: { x: 22, y: 25 }, level: 80 },
-        { job: "miner", nodeType: "石場", zoneId: 2955, coords: { x: 17, y: 13 }, level: 80 },
-        { job: "miner", nodeType: "石場", zoneId: 2956, coords: { x: 31, y: 22 }, level: 80 },
-        { job: "botanist", nodeType: "良材", zoneId: 2957, coords: { x: 24, y: 28 }, level: 80 },
-        { job: "botanist", nodeType: "良材", zoneId: 2958, coords: { x: 19, y: 16 }, level: 80 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2953, coords: { x: 14, y: 21 }, level: 80 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2954, coords: { x: 29, y: 11 }, level: 80 }
-    ],
-
-    // 綠圖 - 深層傳送魔紋的地圖 (Lv.70)
-    19770: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2406, coords: { x: 21, y: 14 }, level: 70 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2407, coords: { x: 18, y: 29 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2408, coords: { x: 25, y: 11 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2409, coords: { x: 32, y: 18 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2410, coords: { x: 16, y: 22 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2411, coords: { x: 28, y: 31 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2406, coords: { x: 13, y: 27 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2407, coords: { x: 22, y: 19 }, level: 70 }
-    ],
-
-    // G10 - 陳舊的瞪羚革地圖 (Lv.70)
-    17836: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2406, coords: { x: 21, y: 14 }, level: 70 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2407, coords: { x: 18, y: 29 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2408, coords: { x: 25, y: 11 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2409, coords: { x: 32, y: 18 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2410, coords: { x: 16, y: 22 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2411, coords: { x: 28, y: 31 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2406, coords: { x: 13, y: 27 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2407, coords: { x: 22, y: 19 }, level: 70 }
-    ],
-
-    // G9 - 陳舊的迦迦納怪鳥革地圖 (Lv.70)
-    17835: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2406, coords: { x: 21, y: 14 }, level: 70 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2407, coords: { x: 18, y: 29 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2408, coords: { x: 25, y: 11 }, level: 70 },
-        { job: "miner", nodeType: "石場", zoneId: 2409, coords: { x: 32, y: 18 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2410, coords: { x: 16, y: 22 }, level: 70 },
-        { job: "botanist", nodeType: "良材", zoneId: 2411, coords: { x: 28, y: 31 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2406, coords: { x: 13, y: 27 }, level: 70 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2407, coords: { x: 22, y: 19 }, level: 70 }
-    ],
-
-    // G8 - 陳舊的巨龍革地圖 (Lv.60)
-    12243: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2200, coords: { x: 22.5, y: 28.2 }, level: 60 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2001, coords: { x: 25.3, y: 25 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2002, coords: { x: 27.6, y: 19.2 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2100, coords: { x: 19, y: 24 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2001, coords: { x: 12.9, y: 18.6 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2200, coords: { x: 11.5, y: 15.2 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2002, coords: { x: 32.5, y: 31.8 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2000, coords: { x: 23, y: 19 }, level: 60 }
-    ],
-
-    // G7 - 陳舊的飛龍革地圖 (Lv.60)
-    12242: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2200, coords: { x: 22.5, y: 28.2 }, level: 60 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2001, coords: { x: 25.3, y: 25 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2002, coords: { x: 27.6, y: 19.2 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2100, coords: { x: 19, y: 24 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2001, coords: { x: 12.9, y: 18.6 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2200, coords: { x: 11.5, y: 15.2 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2002, coords: { x: 32.5, y: 31.8 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2000, coords: { x: 23, y: 19 }, level: 60 }
-    ],
-
-    // G6 - 陳舊的古鳥革地圖 (Lv.60)
-    12241: [
-        { job: "miner", nodeType: "礦脈", zoneId: 2200, coords: { x: 22.5, y: 28.2 }, level: 60 },
-        { job: "miner", nodeType: "礦脈", zoneId: 2001, coords: { x: 25.3, y: 25 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2002, coords: { x: 27.6, y: 19.2 }, level: 60 },
-        { job: "miner", nodeType: "石場", zoneId: 2100, coords: { x: 19, y: 24 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2001, coords: { x: 12.9, y: 18.6 }, level: 60 },
-        { job: "botanist", nodeType: "草叢", zoneId: 2200, coords: { x: 11.5, y: 15.2 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2002, coords: { x: 32.5, y: 31.8 }, level: 60 },
-        { job: "botanist", nodeType: "良材", zoneId: 2000, coords: { x: 23, y: 19 }, level: 60 }
+    // Lv.60 - 蒼穹浪漫 (3.0) - 來源: consolegameswiki
+    // 區域: 庫爾札斯西部高地、德拉瓦尼亞山麓地、德拉瓦尼亞河谷地、德拉瓦尼亞雲海、阿巴拉提亞雲海
+    60: [
+        // 採掘師 - 礦脈 (gatheringType: 0)
+        { gatheringType: 0, zoneId: 2000, coords: { x: 18.7, y: 28.7 } },  // 德拉瓦尼亞山麓地 - Avalonia Fallen
+        { gatheringType: 0, zoneId: 2001, coords: { x: 25.3, y: 25 } },    // 德拉瓦尼亞河谷地 - The Makers' Quarter
+        { gatheringType: 0, zoneId: 2200, coords: { x: 22.5, y: 28.2 } },  // 庫爾札斯西部高地 - Red Rim
+        // 採掘師 - 石場 (gatheringType: 1)
+        { gatheringType: 1, zoneId: 2002, coords: { x: 27.6, y: 19.2 } },  // 德拉瓦尼亞雲海 - Landlord Colony
+        { gatheringType: 1, zoneId: 2100, coords: { x: 34.8, y: 30.5 } },  // 阿巴拉提亞雲海 - Voor Sian Siran
+        // 園藝師 - 良材 (gatheringType: 2)
+        { gatheringType: 2, zoneId: 2000, coords: { x: 10.3, y: 33.1 } },  // 德拉瓦尼亞山麓地 - Avalonia Fallen
+        { gatheringType: 2, zoneId: 2002, coords: { x: 32.5, y: 31.8 } },  // 德拉瓦尼亞雲海 - Eil Tohm
+        { gatheringType: 2, zoneId: 2002, coords: { x: 20.5, y: 29.7 } },  // 德拉瓦尼亞雲海 - Four Arms
+        { gatheringType: 2, zoneId: 2100, coords: { x: 22.6, y: 11.7 } },  // 阿巴拉提亞雲海 - The Blue Window
+        // 園藝師 - 草叢 (gatheringType: 3)
+        { gatheringType: 3, zoneId: 2001, coords: { x: 12.9, y: 18.6 } },  // 德拉瓦尼亞河谷地 - The Answering Quarter
+        { gatheringType: 3, zoneId: 2200, coords: { x: 11.5, y: 15.2 } }   // 庫爾札斯西部高地 - Twinpools
     ]
 };
 

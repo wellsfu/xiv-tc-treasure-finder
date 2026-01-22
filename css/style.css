@@ -1884,26 +1884,27 @@ footer a:hover {
 }
 
 .node-type {
-    min-width: 50px;
+    min-width: 80px;
     font-weight: bold;
     color: var(--text-primary);
 }
 
-.node-zone {
+.node-location {
     flex: 1;
-    min-width: 100px;
+    min-width: 150px;
     color: var(--text-primary);
+}
+
+.node-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .node-coords {
     font-family: 'Consolas', 'Monaco', monospace;
     color: var(--accent-gold);
     font-size: 0.9rem;
-}
-
-.node-level {
-    font-size: 0.85rem;
-    color: var(--text-muted);
 }
 
 .btn-copy-coords {
@@ -1937,8 +1938,13 @@ footer a:hover {
         gap: 8px;
     }
 
-    .btn-copy-coords {
+    .node-details {
         width: 100%;
+        justify-content: space-between;
+    }
+
+    .gathering-node-card .btn-copy-coords {
+        flex-shrink: 0;
     }
 }
 
@@ -1967,8 +1973,12 @@ footer a:hover {
     color: #38bdf8;
 }
 
-/* 暫時隱藏複製座標按鈕 (保留組隊模式的) */
-.copy-pos-btn,
-.btn-copy-coords {
+/* 暫時隱藏複製座標按鈕 (藏寶圖卡片上的) */
+.treasure-map .copy-pos-btn {
     display: none !important;
+}
+
+/* 採集點 Modal 中的複製按鈕保持顯示 */
+.gathering-node-card .btn-copy-coords {
+    display: inline-block !important;
 }

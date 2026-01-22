@@ -57,7 +57,7 @@ function renderGradeButtons() {
                 <span class="gathering-info">
                     <span class="gathering-level">Lv.${grade.gatheringLevel}</span>
                 </span>
-                <button class="btn-gathering-nodes" data-item-id="${grade.itemId}" onclick="event.stopPropagation(); showGatheringNodes(${grade.itemId}, '${grade.grade}', '${escapeHtml(grade.name)}')">
+                <button class="btn-gathering-nodes" data-gathering-level="${grade.gatheringLevel}" onclick="event.stopPropagation(); showGatheringNodes(${grade.gatheringLevel}, '${grade.grade}', '${escapeHtml(grade.name)}')">
                     採集點
                 </button>
             ` : ''}
@@ -1332,9 +1332,9 @@ function escapeHtml(text) {
 // 採集點功能
 // ============================================
 
-// 顯示採集點 Modal
-function showGatheringNodes(itemId, gradeName, mapName) {
-    const nodes = GATHERING_NODES[itemId];
+// 顯示採集點 Modal - 按等級查詢
+function showGatheringNodes(gatheringLevel, gradeName, mapName) {
+    const nodes = GATHERING_NODES_BY_LEVEL[gatheringLevel];
     if (!nodes || nodes.length === 0) {
         alert('暫無採集點資料');
         return;
@@ -1342,26 +1342,26 @@ function showGatheringNodes(itemId, gradeName, mapName) {
 
     // 更新標題
     document.getElementById('gathering-modal-title').textContent =
-        `${gradeName} - ${mapName} 採集點`;
+        `${gradeName} - ${mapName} (Lv.${gatheringLevel} 採集點)`;
 
-    // 按職業分組
-    const minerNodes = nodes.filter(n => n.job === 'miner');
-    const botanistNodes = nodes.filter(n => n.job === 'botanist');
+    // 按職業分組 (gatheringType 0,1 = 採掘師, 2,3 = 園藝師)
+    const minerNodes = nodes.filter(n => n.gatheringType <= 1);
+    const botanistNodes = nodes.filter(n => n.gatheringType >= 2);
 
     // 生成 HTML
     let html = '';
 
     if (minerNodes.length > 0) {
         html += `<div class="gathering-job-section">
-            <h3 class="gathering-job-title">採掘師</h3>
-            ${minerNodes.map(renderNodeCard).join('')}
+            <h3 class="gathering-job-title">採掘師 (${minerNodes.length}個)</h3>
+            ${minerNodes.map(n => renderNodeCard(n, gatheringLevel)).join('')}
         </div>`;
     }
 
     if (botanistNodes.length > 0) {
         html += `<div class="gathering-job-section">
-            <h3 class="gathering-job-title">園藝師</h3>
-            ${botanistNodes.map(renderNodeCard).join('')}
+            <h3 class="gathering-job-title">園藝師 (${botanistNodes.length}個)</h3>
+            ${botanistNodes.map(n => renderNodeCard(n, gatheringLevel)).join('')}
         </div>`;
     }
 
@@ -1369,17 +1369,20 @@ function showGatheringNodes(itemId, gradeName, mapName) {
     openModal('modal-gathering-nodes');
 }
 
-// 渲染單個節點卡片 - 使用 zoneId 參照 PLACE_NAMES
-function renderNodeCard(node) {
+// 渲染單個節點卡片 - 使用 gatheringType 和 GATHERING_TYPE_INFO
+function renderNodeCard(node, level) {
     const zoneName = PLACE_NAMES[node.zoneId] || `地點 ${node.zoneId}`;
-    const posCmd = `<pos> ${node.coords.x} ${node.coords.y}`;
+    const typeInfo = GATHERING_TYPE_INFO[node.gatheringType];
+    const posCmd = `/pos ${node.coords.x.toFixed(1)} ${node.coords.y.toFixed(1)}`;
+
     return `
         <div class="gathering-node-card">
-            <div class="node-type">${node.nodeType}</div>
-            <div class="node-zone">${zoneName}</div>
-            <div class="node-coords">X: ${node.coords.x} Y: ${node.coords.y}</div>
-            <div class="node-level">Lv.${node.level}</div>
-            <button class="btn-copy-coords" onclick="copyNodeCoords('${posCmd}', this)">複製座標</button>
+            <div class="node-type">${typeInfo.nodeType}</div>
+            <div class="node-location">${zoneName}</div>
+            <div class="node-details">
+                <span class="node-coords">(${node.coords.x.toFixed(1)}, ${node.coords.y.toFixed(1)})</span>
+                <button class="btn-copy-coords" onclick="copyNodeCoords('${posCmd}', this)">複製</button>
+            </div>
         </div>
     `;
 }
@@ -1390,7 +1393,7 @@ function copyNodeCoords(posCmd, btn) {
         btn.textContent = '已複製';
         btn.classList.add('copied');
         setTimeout(() => {
-            btn.textContent = '複製座標';
+            btn.textContent = '複製';
             btn.classList.remove('copied');
         }, 1500);
     });
