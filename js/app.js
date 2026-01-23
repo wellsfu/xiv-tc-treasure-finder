@@ -3,6 +3,21 @@ let selectedGrade = null;
 let selectedMapId = null;
 let selectedTreasure = null;
 
+// 暱稱儲存
+const NICKNAME_STORAGE_KEY = 'ffxiv_treasure_nickname';
+
+// 儲存暱稱到 localStorage
+function saveNickname(nickname) {
+    if (nickname && nickname.trim()) {
+        localStorage.setItem(NICKNAME_STORAGE_KEY, nickname.trim());
+    }
+}
+
+// 從 localStorage 讀取暱稱
+function loadNickname() {
+    return localStorage.getItem(NICKNAME_STORAGE_KEY) || '';
+}
+
 // 隊伍狀態
 let isFirebaseReady = false;
 let partyMembers = {};
@@ -353,12 +368,141 @@ async function initializePartySystem() {
     // Firebase 連線會在使用者建立/加入隊伍時才建立
     bindPartyEvents();
 
-    // 檢查是否有已儲存的隊伍狀態 (用於重連)
-    if (PartyService.hasSavedPartyState()) {
+    // 檢查 URL 是否有邀請代碼 (?party=XXXXXXXX)
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('party');
+
+    if (inviteCode) {
+        // 有邀請連結，處理加入流程
+        handleInviteUrl(inviteCode);
+    } else if (PartyService.hasSavedPartyState()) {
+        // 檢查是否有已儲存的隊伍狀態 (用於重連)
         showReconnectPrompt();
     }
 
     console.log('隊伍系統就緒 (延遲連線模式)');
+}
+
+// 處理邀請連結
+async function handleInviteUrl(partyCode) {
+    // 驗證代碼格式
+    if (!PartyService.isValidCodeFormat(partyCode)) {
+        console.warn('邀請連結代碼格式無效:', partyCode);
+        clearInviteUrlParam();
+        return;
+    }
+
+    console.log('檢測到邀請連結，隊伍代碼:', partyCode);
+
+    // 檢查是否有已儲存的暱稱
+    const savedNickname = loadNickname();
+
+    if (savedNickname) {
+        // 有暱稱，直接加入隊伍
+        console.log('使用已儲存的暱稱直接加入:', savedNickname);
+        clearInviteUrlParam();
+
+        try {
+            // 確保 Firebase 已連線
+            const connected = await ensureFirebaseConnected();
+            if (!connected) {
+                throw new Error('無法連接伺服器，請稍後再試');
+            }
+
+            await PartyService.joinParty(partyCode, savedNickname);
+            SyncService.startSync(partyCode);
+            closeModal('modal-join-party');
+            updatePartyUI();
+        } catch (error) {
+            console.error('透過邀請連結加入失敗:', error);
+            alert('加入隊伍失敗: ' + error.message);
+        }
+        return;
+    }
+
+    // 沒有暱稱，開啟 Modal 讓使用者輸入
+    clearInviteUrlParam();
+    openModal('modal-join-party');
+
+    const codeInput = document.getElementById('join-party-code');
+    if (codeInput) {
+        codeInput.value = partyCode;
+        codeInput.readOnly = true; // 鎖定代碼欄位，避免修改
+        codeInput.classList.add('invite-code'); // 加入樣式標記
+    }
+
+    // 聚焦到暱稱欄位
+    const nicknameInput = document.getElementById('join-nickname');
+    if (nicknameInput) {
+        setTimeout(() => nicknameInput.focus(), 100);
+    }
+}
+
+// 清除 URL 中的邀請參數
+function clearInviteUrlParam() {
+    const url = new URL(window.location);
+    url.searchParams.delete('party');
+    window.history.replaceState({}, '', url.pathname + url.search);
+}
+
+// 修改暱稱
+async function promptEditNickname() {
+    const currentNickname = PartyService.getNickname() || loadNickname();
+    const newNickname = prompt('請輸入新的暱稱：', currentNickname);
+
+    if (newNickname === null) return; // 取消
+    if (!newNickname.trim()) {
+        alert('暱稱不能為空');
+        return;
+    }
+
+    const trimmedNickname = newNickname.trim();
+    if (trimmedNickname === currentNickname) return; // 沒有變更
+
+    try {
+        // 更新 Firebase 中的暱稱
+        await PartyService.updateNickname(trimmedNickname);
+
+        // 儲存到 localStorage
+        saveNickname(trimmedNickname);
+
+        console.log('暱稱已更新為:', trimmedNickname);
+    } catch (error) {
+        console.error('更新暱稱失敗:', error);
+        alert('更新暱稱失敗: ' + error.message);
+    }
+}
+
+// 複製邀請連結
+function copyInviteLink(btnElement) {
+    const partyCode = PartyService.getCurrentPartyCode();
+    if (!partyCode) return;
+
+    const url = `${window.location.origin}${window.location.pathname}?party=${partyCode}`;
+
+    navigator.clipboard.writeText(url).then(() => {
+        // 顯示複製成功提示
+        const btn = btnElement || document.getElementById('btn-copy-invite');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            const isLarge = btn.classList.contains('btn-invite-link-lg');
+            btn.innerHTML = `
+                <svg width="${isLarge ? 18 : 14}" height="${isLarge ? 18 : 14}" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+                已複製
+            `;
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    }).catch(err => {
+        console.error('複製失敗:', err);
+        // Fallback: 選取文字
+        prompt('請複製以下連結:', url);
+    });
 }
 
 // 顯示重連提示
@@ -540,13 +684,13 @@ function bindPartyEvents() {
     // 建立隊伍按鈕
     const btnCreateParty = document.getElementById('btn-create-party');
     if (btnCreateParty) {
-        btnCreateParty.addEventListener('click', () => openModal('modal-create-party'));
+        btnCreateParty.addEventListener('click', handleCreatePartyClick);
     }
 
     // 加入隊伍按鈕
     const btnJoinParty = document.getElementById('btn-join-party');
     if (btnJoinParty) {
-        btnJoinParty.addEventListener('click', () => openModal('modal-join-party'));
+        btnJoinParty.addEventListener('click', handleJoinPartyClick);
     }
 
     // 隊伍狀態按鈕
@@ -673,6 +817,20 @@ function openModal(modalId) {
         if (modalId === 'modal-party-status') {
             updatePartyStatusModal();
         }
+
+        // 如果是建立/加入隊伍 Modal，預填暱稱
+        if (modalId === 'modal-create-party') {
+            const nicknameInput = document.getElementById('create-nickname');
+            if (nicknameInput) {
+                nicknameInput.value = loadNickname();
+            }
+        }
+        if (modalId === 'modal-join-party') {
+            const nicknameInput = document.getElementById('join-nickname');
+            if (nicknameInput) {
+                nicknameInput.value = loadNickname();
+            }
+        }
     }
 }
 
@@ -682,9 +840,78 @@ function closeModal(modalId) {
     if (modal) {
         modal.classList.remove('active');
     }
+
+    // 如果是加入隊伍 Modal，重置表單狀態
+    if (modalId === 'modal-join-party') {
+        resetJoinModal();
+    }
 }
 
-// 處理建立隊伍
+// 重置加入隊伍 Modal
+function resetJoinModal() {
+    const codeInput = document.getElementById('join-party-code');
+    const nicknameInput = document.getElementById('join-nickname');
+    const errorEl = document.getElementById('join-party-error');
+
+    if (codeInput) {
+        codeInput.value = '';
+        codeInput.readOnly = false;
+        codeInput.classList.remove('invite-code');
+    }
+    if (nicknameInput) {
+        nicknameInput.value = '';
+    }
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+    }
+
+    // 清除 URL 邀請參數
+    clearInviteUrlParam();
+}
+
+// 建立隊伍按鈕點擊處理
+async function handleCreatePartyClick() {
+    const savedNickname = loadNickname();
+
+    if (savedNickname) {
+        // 有暱稱，直接建立隊伍
+        try {
+            const connected = await ensureFirebaseConnected();
+            if (!connected) {
+                throw new Error('無法連接伺服器，請稍後再試');
+            }
+
+            const partyCode = await PartyService.createParty(savedNickname);
+            SyncService.startSync(partyCode);
+            updatePartyButtonsUI(true);
+            document.getElementById('status-party-code').textContent = partyCode;
+        } catch (error) {
+            alert('建立隊伍失敗: ' + error.message);
+        }
+    } else {
+        // 沒有暱稱，開啟 Modal
+        openModal('modal-create-party');
+    }
+}
+
+// 加入隊伍按鈕點擊處理
+function handleJoinPartyClick() {
+    const savedNickname = loadNickname();
+
+    openModal('modal-join-party');
+
+    // 如果有暱稱，隱藏暱稱欄位
+    const nicknameGroup = document.querySelector('#modal-join-party .nickname-input-group');
+    if (nicknameGroup) {
+        if (savedNickname) {
+            nicknameGroup.classList.add('hidden');
+        } else {
+            nicknameGroup.classList.remove('hidden');
+        }
+    }
+}
+
+// 處理建立隊伍 (Modal 確認按鈕)
 async function handleCreateParty() {
     const btn = document.getElementById('btn-confirm-create');
     const errorEl = document.getElementById('create-party-error');
@@ -706,6 +933,11 @@ async function handleCreateParty() {
         btn.textContent = '建立中...';
         const nickname = nicknameInput.value.trim() || null;
         const partyCode = await PartyService.createParty(nickname);
+
+        // 儲存暱稱到 localStorage
+        if (nickname) {
+            saveNickname(nickname);
+        }
 
         // 顯示結果
         document.getElementById('created-party-code').textContent = partyCode;
@@ -753,8 +985,14 @@ async function handleJoinParty() {
         }
 
         btn.textContent = '加入中...';
-        const nickname = nicknameInput.value.trim() || null;
+        // 優先使用輸入的暱稱，否則使用 localStorage 儲存的暱稱
+        const nickname = nicknameInput.value.trim() || loadNickname() || null;
         await PartyService.joinParty(code, nickname);
+
+        // 儲存暱稱到 localStorage
+        if (nickname) {
+            saveNickname(nickname);
+        }
 
         // 開始同步
         SyncService.startSync(code);
@@ -763,11 +1001,16 @@ async function handleJoinParty() {
         updatePartyButtonsUI(true);
         document.getElementById('status-party-code').textContent = code;
 
+        // 清除 URL 邀請參數 (如果有的話)
+        clearInviteUrlParam();
+
         // 關閉 Modal
         closeModal('modal-join-party');
 
         // 重置表單
         codeInput.value = '';
+        codeInput.readOnly = false;
+        codeInput.classList.remove('invite-code');
         nicknameInput.value = '';
 
     } catch (error) {
@@ -869,9 +1112,16 @@ function updateMembersUI() {
     const membersHtml = members.map(([id, member]) => {
         const isSelf = id === currentUserId;
         const isLeader = member.isLeader;
+        const editBtn = isSelf ? `
+            <button class="btn-edit-nickname" onclick="promptEditNickname()" title="修改暱稱">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+            </button>
+        ` : '';
         return `
             <span class="member-tag ${isSelf ? 'is-self' : ''} ${isLeader ? 'is-leader' : ''}">
-                ${escapeHtml(member.nickname)}
+                ${escapeHtml(member.nickname)}${editBtn}
             </span>
         `;
     }).join('');

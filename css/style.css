@@ -973,6 +973,82 @@ footer a:hover {
     background: var(--success);
 }
 
+/* 邀請連結按鈕 */
+.btn-invite-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    margin-left: 8px;
+}
+
+.btn-invite-link:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.btn-invite-link.copied {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+/* 邀請代碼輸入框 (從連結加入時鎖定) */
+.invite-code {
+    background: var(--bg-tertiary) !important;
+    color: var(--accent-gold) !important;
+    font-weight: bold;
+    cursor: not-allowed;
+}
+
+/* 邀請連結區塊 (建立隊伍後顯示) */
+.invite-link-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.btn-invite-link-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn-invite-link-lg:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-invite-link-lg.copied {
+    background: linear-gradient(135deg, var(--success) 0%, #4ade80 100%);
+}
+
+.invite-hint {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
 /* 按鈕樣式 */
 .btn {
     padding: 10px 20px;
@@ -1114,6 +1190,35 @@ footer a:hover {
     content: '★';
     color: var(--accent-gold);
     margin-left: 2px;
+}
+
+/* 修改暱稱按鈕 */
+.btn-edit-nickname {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin-left: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.2s;
+}
+
+.btn-edit-nickname:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.btn-edit-nickname svg {
+    width: 10px;
+    height: 10px;
 }
 
 /* 隊伍藏寶圖列表 */
