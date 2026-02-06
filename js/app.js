@@ -1216,8 +1216,11 @@ function updateRouteListUI() {
 
     if (!routeItems) return;
 
-    // 按順序排序
-    const sortedTreasures = [...partyTreasures].sort((a, b) => (a.order || 0) - (b.order || 0));
+    // 按順序排序（已完成的項目移至最下方，不參與排序）
+    const sortedTreasures = [...partyTreasures].sort((a, b) => {
+        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+        return (a.order || 0) - (b.order || 0);
+    });
 
     if (routeCount) routeCount.textContent = sortedTreasures.length;
 
@@ -1315,7 +1318,10 @@ function updateMapPreviewUI() {
         // 篩選該地圖的藏寶圖
         const treasuresOnMap = partyTreasures
             .filter(t => t.mapId === selectedMapId)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
+            .sort((a, b) => {
+                if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+                return (a.order || 0) - (b.order || 0);
+            });
 
         // 繪製標記
         markersContainer.innerHTML = treasuresOnMap.map((treasure, idx) => {
@@ -1460,7 +1466,10 @@ function calcZoomOffset(coords, mapId) {
 
 // 移動路線項目 (使用 firebaseKey)
 async function moveRouteItem(firebaseKey, direction) {
-    const sortedTreasures = [...partyTreasures].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const sortedTreasures = [...partyTreasures].sort((a, b) => {
+        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+        return (a.order || 0) - (b.order || 0);
+    });
     const currentIndex = sortedTreasures.findIndex(t => t.firebaseKey === firebaseKey);
 
     if (currentIndex === -1) return;
@@ -1471,6 +1480,9 @@ async function moveRouteItem(firebaseKey, direction) {
 
     const current = sortedTreasures[currentIndex];
     const target = sortedTreasures[targetIndex];
+
+    // 不允許跨越完成/未完成的邊界移動
+    if (!!current.completed !== !!target.completed) return;
 
     try {
         await PartyService.swapTreasureOrder(current.firebaseKey, target.firebaseKey);
