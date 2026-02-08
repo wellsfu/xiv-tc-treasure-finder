@@ -1799,43 +1799,13 @@ footer a:hover {
     background: var(--success);
 }
 
-.route-item-actions button.btn-remove {
-    opacity: 0.25;
-    pointer-events: none;
-    cursor: not-allowed;
-    transition: opacity 0.2s;
-}
-
-.route-item-actions button.btn-remove.armed {
-    opacity: 1;
-    pointer-events: auto;
-    cursor: pointer;
-}
-
-.route-item-actions button.btn-remove.armed:hover {
+.route-item-actions button.btn-remove:hover {
     background: var(--error);
 }
 
 .route-item-actions button.btn-copy-coords-party.copied {
     background: var(--success);
     color: white;
-}
-
-.route-hint {
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    text-align: center;
-    padding: 12px 16px;
-    background: var(--bg-tertiary);
-    border-top: 1px solid var(--border);
-    transition: all 0.2s;
-}
-
-.route-hint.armed {
-    opacity: 1;
-    color: #fff;
-    background: var(--error, #e53935);
-    font-weight: bold;
 }
 
 /* 地圖預覽 */

@@ -350,33 +350,6 @@ function bindEvents() {
         showStep('map');
     });
 
-    // 同時按住左右 Ctrl（或任意 Shift）才啟用移除按鈕
-    let leftCtrl = false, rightCtrl = false;
-    function setRemoveArmed(armed) {
-        document.querySelectorAll('.btn-remove').forEach(btn => {
-            btn.classList.toggle('armed', armed);
-        });
-        const hint = document.getElementById('route-remove-hint');
-        if (hint) {
-            hint.classList.toggle('armed', armed);
-            hint.textContent = armed ? '移除按鈕已啟用' : '同時按住左右 Ctrl 以啟用移除按鈕';
-        }
-    }
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'ControlLeft') leftCtrl = true;
-        if (e.code === 'ControlRight') rightCtrl = true;
-        setRemoveArmed((leftCtrl && rightCtrl) || e.shiftKey);
-    });
-    document.addEventListener('keyup', (e) => {
-        if (e.code === 'ControlLeft') leftCtrl = false;
-        if (e.code === 'ControlRight') rightCtrl = false;
-        setRemoveArmed((leftCtrl && rightCtrl) || e.shiftKey);
-    });
-    window.addEventListener('blur', () => {
-        leftCtrl = false;
-        rightCtrl = false;
-        setRemoveArmed(false);
-    });
 }
 
 // ============================================
@@ -1333,7 +1306,7 @@ function renderRouteItem(treasure, index, isCompleted) {
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                     </svg>
                 </button>
-                <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${firebaseKey}')" title="同時按住左右 Ctrl 以啟用移除">
+                <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${firebaseKey}')" title="移除">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                     </svg>
@@ -1545,28 +1518,25 @@ function updateMapPreviewUI() {
     if (selectedMapId && MAP_DATA[selectedMapId]) {
         mapImage.src = MAP_DATA[selectedMapId].image;
 
-        // 篩選該地圖的藏寶圖
-        const treasuresOnMap = partyTreasures
-            .filter(t => t.mapId === selectedMapId)
-            .sort((a, b) => {
-                if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-                return (a.order || 0) - (b.order || 0);
-            });
+        // 未完成項目的全域排序（與左側列表一致）
+        const pendingSorted = [...partyTreasures].filter(t => !t.completed).sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        // 繪製標記
-        markersContainer.innerHTML = treasuresOnMap.map((treasure, idx) => {
+        // 篩選該地圖的未完成藏寶圖
+        const treasuresOnMap = pendingSorted.filter(t => t.mapId === selectedMapId);
+
+        // 繪製標記（編號與左側列表一致）
+        markersContainer.innerHTML = treasuresOnMap.map((treasure) => {
             const pos = coordsToPercent(treasure.coords, treasure.mapId);
             const firebaseKey = treasure.firebaseKey;
-            const globalIndex = partyTreasures.sort((a, b) => (a.order || 0) - (b.order || 0)).findIndex(t => t.firebaseKey === firebaseKey) + 1;
+            const listIndex = pendingSorted.findIndex(t => t.firebaseKey === firebaseKey) + 1;
             const isActive = selectedRouteItem === firebaseKey;
-            const isCompleted = treasure.completed;
 
             return `
-                <div class="preview-marker ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+                <div class="preview-marker ${isActive ? 'active' : ''}"
                      style="left: ${pos.x}%; top: ${pos.y}%;"
                      onclick="selectRouteItem('${firebaseKey}')"
                      title="${getMapName(treasure.mapId)} - X: ${treasure.coords.x.toFixed(1)} Y: ${treasure.coords.y.toFixed(1)}">
-                    ${globalIndex}
+                    ${listIndex}
                 </div>
             `;
         }).join('');
