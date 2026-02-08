@@ -1244,15 +1244,13 @@ function updateRouteListUI() {
 
     if (!routeItems) return;
 
-    // 按順序排序（已完成的項目移至最下方，不參與排序）
-    const sortedTreasures = [...partyTreasures].sort((a, b) => {
-        if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
-        return (a.order || 0) - (b.order || 0);
-    });
+    // 分開未完成和已完成的項目
+    const pendingTreasures = [...partyTreasures].filter(t => !t.completed).sort((a, b) => (a.order || 0) - (b.order || 0));
+    const completedTreasures = [...partyTreasures].filter(t => t.completed).sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    if (routeCount) routeCount.textContent = sortedTreasures.length;
+    if (routeCount) routeCount.textContent = partyTreasures.length;
 
-    if (sortedTreasures.length === 0) {
+    if (partyTreasures.length === 0) {
         routeItems.innerHTML = `
             <div class="route-empty">
                 <p>尚未新增藏寶圖</p>
@@ -1262,55 +1260,259 @@ function updateRouteListUI() {
         return;
     }
 
-    routeItems.innerHTML = sortedTreasures.map((treasure, index) => {
-        const mapName = getMapName(treasure.mapId);
-        const firebaseKey = treasure.firebaseKey;
-        const isActive = selectedRouteItem === firebaseKey;
-        const isCompleted = treasure.completed;
+    // 生成未完成項目 HTML（可拖曳）
+    const pendingHTML = pendingTreasures.map((treasure, index) => {
+        return renderRouteItem(treasure, index, false);
+    }).join('');
 
-        // 取得最近傳送點
-        const zoneId = MAP_DATA[treasure.mapId]?.placename_id;
-        const nearestAetheryte = zoneId ? findNearestAetheryte(zoneId, treasure.coords) : null;
-
-        return `
-            <div class="route-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
-                 data-firebase-key="${firebaseKey}"
-                 onclick="selectRouteItem('${firebaseKey}')">
-                <div class="route-item-order">
-                    <div class="route-item-number"><span>${index + 1}</span></div>
+    // 生成已完成項目 HTML（可收縮）
+    let completedHTML = '';
+    if (completedTreasures.length > 0) {
+        const isExpanded = routeItems.querySelector('.route-completed-section.expanded') !== null;
+        completedHTML = `
+            <div class="route-completed-section ${isExpanded ? 'expanded' : ''}">
+                <div class="route-completed-header" onclick="toggleCompletedSection()">
+                    <span class="route-completed-toggle">▶</span>
+                    <span>已完成 (${completedTreasures.length})</span>
                 </div>
-                <div class="route-item-info">
-                    <div class="route-item-map">${escapeHtml(mapName)}</div>
-                    <div class="route-item-details">
-                        <span class="route-item-coords">X: ${treasure.coords.x.toFixed(1)} Y: ${treasure.coords.y.toFixed(1)}</span>
-                        ${nearestAetheryte ? `<span class="route-item-aetheryte" title="最近傳送水晶"><span class="aetheryte-icon">⬡</span> ${escapeHtml(nearestAetheryte.name)}</span>` : ''}
-                        <span class="route-item-adder">${escapeHtml(treasure.addedByNickname || '未知')}</span>
-                    </div>
-                </div>
-                <div class="route-item-actions">
-                    <div class="route-order-btns">
-                        <button onclick="event.stopPropagation(); moveRouteItem('${firebaseKey}', 'up')" title="上移">▲</button>
-                        <button onclick="event.stopPropagation(); moveRouteItem('${firebaseKey}', 'down')" title="下移">▼</button>
-                    </div>
-                    <button class="btn-complete" onclick="event.stopPropagation(); toggleRouteComplete('${firebaseKey}')" title="${isCompleted ? '標記未完成' : '標記完成'}">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <button class="btn-copy-coords-party" onclick="event.stopPropagation(); copyPartyCoords(this, '${escapeHtml(mapName)}', '${treasure.coords.x.toFixed(1)}', '${treasure.coords.y.toFixed(1)}', '${nearestAetheryte ? escapeHtml(nearestAetheryte.name) : ''}')" title="複製座標">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                        </svg>
-                    </button>
-                    <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${firebaseKey}')" title="同時按住左右 Ctrl 以啟用移除">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                    </button>
+                <div class="route-completed-list">
+                    ${completedTreasures.map((treasure, index) => {
+                        return renderRouteItem(treasure, pendingTreasures.length + index, true);
+                    }).join('')}
                 </div>
             </div>
         `;
-    }).join('');
+    }
+
+    routeItems.innerHTML = `
+        <div class="route-pending-list" id="route-pending-list">
+            ${pendingHTML || '<div class="route-empty-pending">所有藏寶圖已完成</div>'}
+        </div>
+        ${completedHTML}
+    `;
+
+    // 初始化拖曳功能
+    initRouteDragAndDrop();
+}
+
+// 渲染單一路線項目
+function renderRouteItem(treasure, index, isCompleted) {
+    const mapName = getMapName(treasure.mapId);
+    const firebaseKey = treasure.firebaseKey;
+    const isActive = selectedRouteItem === firebaseKey;
+
+    // 取得最近傳送點
+    const zoneId = MAP_DATA[treasure.mapId]?.placename_id;
+    const nearestAetheryte = zoneId ? findNearestAetheryte(zoneId, treasure.coords) : null;
+
+    return `
+        <div class="route-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+             data-firebase-key="${firebaseKey}"
+             ${!isCompleted ? 'draggable="true"' : ''}
+             onclick="selectRouteItem('${firebaseKey}')">
+            ${!isCompleted ? '<div class="route-item-drag-handle" title="拖曳排序">⠿</div>' : ''}
+            <div class="route-item-order">
+                <div class="route-item-number"><span>${index + 1}</span></div>
+            </div>
+            <div class="route-item-info">
+                <div class="route-item-map">${escapeHtml(mapName)}</div>
+                <div class="route-item-details">
+                    <span class="route-item-coords">X: ${treasure.coords.x.toFixed(1)} Y: ${treasure.coords.y.toFixed(1)}</span>
+                    ${nearestAetheryte ? `<span class="route-item-aetheryte" title="最近傳送水晶"><span class="aetheryte-icon">⬡</span> ${escapeHtml(nearestAetheryte.name)}</span>` : ''}
+                    <span class="route-item-adder">${escapeHtml(treasure.addedByNickname || '未知')}</span>
+                </div>
+            </div>
+            <div class="route-item-actions">
+                <button class="btn-complete" onclick="event.stopPropagation(); toggleRouteComplete('${firebaseKey}')" title="${isCompleted ? '標記未完成' : '標記完成'}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </button>
+                <button class="btn-copy-coords-party" onclick="event.stopPropagation(); copyPartyCoords(this, '${escapeHtml(mapName)}', '${treasure.coords.x.toFixed(1)}', '${treasure.coords.y.toFixed(1)}', '${nearestAetheryte ? escapeHtml(nearestAetheryte.name) : ''}')" title="複製座標">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </button>
+                <button class="btn-remove" onclick="event.stopPropagation(); removeTreasureFromParty('${firebaseKey}')" title="同時按住左右 Ctrl 以啟用移除">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// 切換已完成區塊展開/收縮
+function toggleCompletedSection() {
+    const section = document.querySelector('.route-completed-section');
+    if (section) {
+        section.classList.toggle('expanded');
+    }
+}
+
+// 拖曳排序功能（支援桌面與手機觸控）
+function initRouteDragAndDrop() {
+    const pendingList = document.getElementById('route-pending-list');
+    if (!pendingList) return;
+
+    let draggedItem = null;
+    let dragPlaceholder = null;
+    let longPressTimer = null;
+    let isDraggingTouch = false;
+
+    const items = pendingList.querySelectorAll('.route-item[draggable="true"]');
+
+    // === 桌面拖曳 (HTML5 Drag API) ===
+    items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            draggedItem = item;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.dataset.firebaseKey);
+
+            dragPlaceholder = document.createElement('div');
+            dragPlaceholder.classList.add('route-drag-placeholder');
+            dragPlaceholder.style.height = item.offsetHeight + 'px';
+
+            requestAnimationFrame(() => {
+                item.style.display = 'none';
+                pendingList.insertBefore(dragPlaceholder, item.nextSibling);
+            });
+        });
+
+        item.addEventListener('dragend', async () => {
+            item.classList.remove('dragging');
+            item.style.display = '';
+
+            if (dragPlaceholder && dragPlaceholder.parentNode) {
+                pendingList.insertBefore(item, dragPlaceholder);
+                dragPlaceholder.remove();
+            }
+
+            const newOrder = Array.from(pendingList.querySelectorAll('.route-item')).map(el => el.dataset.firebaseKey);
+            await applyDragOrder(newOrder);
+
+            draggedItem = null;
+            dragPlaceholder = null;
+        });
+
+        // === 手機觸控拖曳 ===
+        const handle = item.querySelector('.route-item-drag-handle');
+        if (handle) {
+            handle.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+
+                longPressTimer = setTimeout(() => {
+                    isDraggingTouch = true;
+                    draggedItem = item;
+                    item.classList.add('dragging');
+
+                    dragPlaceholder = document.createElement('div');
+                    dragPlaceholder.classList.add('route-drag-placeholder');
+                    dragPlaceholder.style.height = item.offsetHeight + 'px';
+                    pendingList.insertBefore(dragPlaceholder, item.nextSibling);
+
+                    item.style.position = 'fixed';
+                    item.style.zIndex = '1000';
+                    item.style.width = item.offsetWidth + 'px';
+                    item.style.left = item.getBoundingClientRect().left + 'px';
+                    item.style.top = (touch.clientY - item.offsetHeight / 2) + 'px';
+                    item.style.pointerEvents = 'none';
+                    item.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)';
+                }, 150);
+            }, { passive: false });
+
+            handle.addEventListener('touchmove', (e) => {
+                if (!isDraggingTouch) {
+                    clearTimeout(longPressTimer);
+                    return;
+                }
+                e.preventDefault();
+                const touch = e.touches[0];
+
+                draggedItem.style.top = (touch.clientY - draggedItem.offsetHeight / 2) + 'px';
+
+                const afterElement = getDragAfterElement(pendingList, touch.clientY);
+                if (afterElement) {
+                    pendingList.insertBefore(dragPlaceholder, afterElement);
+                } else {
+                    pendingList.appendChild(dragPlaceholder);
+                }
+            }, { passive: false });
+
+            handle.addEventListener('touchend', async () => {
+                clearTimeout(longPressTimer);
+
+                if (!isDraggingTouch) return;
+                isDraggingTouch = false;
+
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.position = '';
+                draggedItem.style.zIndex = '';
+                draggedItem.style.width = '';
+                draggedItem.style.left = '';
+                draggedItem.style.top = '';
+                draggedItem.style.pointerEvents = '';
+                draggedItem.style.boxShadow = '';
+
+                if (dragPlaceholder && dragPlaceholder.parentNode) {
+                    pendingList.insertBefore(draggedItem, dragPlaceholder);
+                    dragPlaceholder.remove();
+                }
+
+                const newOrder = Array.from(pendingList.querySelectorAll('.route-item')).map(el => el.dataset.firebaseKey);
+                await applyDragOrder(newOrder);
+
+                draggedItem = null;
+                dragPlaceholder = null;
+            });
+        }
+    });
+
+    pendingList.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (!dragPlaceholder) return;
+
+        const afterElement = getDragAfterElement(pendingList, e.clientY);
+        if (afterElement) {
+            pendingList.insertBefore(dragPlaceholder, afterElement);
+        } else {
+            pendingList.appendChild(dragPlaceholder);
+        }
+    });
+}
+
+// 取得拖曳目標位置
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.route-item:not(.dragging)')];
+
+    let closest = null;
+    let closestOffset = Number.NEGATIVE_INFINITY;
+
+    draggableElements.forEach(child => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closestOffset) {
+            closestOffset = offset;
+            closest = child;
+        }
+    });
+
+    return closest;
+}
+
+// 套用拖曳後的新順序到 Firebase
+async function applyDragOrder(orderedKeys) {
+    try {
+        await PartyService.batchUpdateOrder(orderedKeys);
+    } catch (error) {
+        console.error('更新順序失敗:', error);
+        updateRouteListUI();
+    }
 }
 
 // 更新地圖預覽 UI

@@ -390,6 +390,27 @@ const PartyService = (function() {
         });
     }
 
+    // 批次更新多個藏寶圖順序 (使用 Transaction 確保並發安全)
+    async function batchUpdateOrder(orderedKeys) {
+        const sdk = window.FirebaseSDK;
+        if (!sdk) throw new Error('Firebase SDK 尚未載入');
+
+        if (!currentPartyCode) {
+            throw new Error('尚未加入隊伍');
+        }
+
+        const treasuresRef = getRef(`parties/${currentPartyCode}/treasures`);
+        await sdk.runTransaction(treasuresRef, (treasures) => {
+            if (!treasures) return treasures;
+            orderedKeys.forEach((key, index) => {
+                if (treasures[key]) {
+                    treasures[key].order = index;
+                }
+            });
+            return treasures;
+        });
+    }
+
     // 清除所有已完成的藏寶圖
     async function clearCompletedTreasures() {
         const sdk = window.FirebaseSDK;
@@ -555,6 +576,7 @@ const PartyService = (function() {
         toggleTreasureComplete,
         updateTreasureOrder,
         swapTreasureOrder,
+        batchUpdateOrder,
         autoOptimizeRoute,
         clearCompletedTreasures,
         updateNickname,

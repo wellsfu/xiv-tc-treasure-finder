@@ -1541,7 +1541,99 @@ footer a:hover {
     padding: 12px;
     display: flex;
     flex-direction: column;
+    gap: 12px;
+}
+
+/* 未完成項目列表 */
+.route-pending-list {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
+}
+
+.route-empty-pending {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px;
+    font-size: 0.9rem;
+}
+
+/* 已完成區塊 - 可收縮 */
+.route-completed-section {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+}
+
+.route-completed-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.route-completed-header:hover {
+    background: var(--bg-tertiary);
+}
+
+.route-completed-toggle {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.route-completed-section.expanded .route-completed-toggle {
+    transform: rotate(90deg);
+}
+
+.route-completed-list {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.route-completed-section.expanded .route-completed-list {
+    display: flex;
+}
+
+/* 拖曳手把 */
+.route-item-drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    padding: 0 4px;
+    user-select: none;
+    line-height: 1;
+    letter-spacing: 1px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.route-item:hover .route-item-drag-handle {
+    opacity: 1;
+}
+
+.route-item-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* 拖曳中的項目 */
+.route-item.dragging {
+    opacity: 0.4;
+}
+
+/* 拖曳佔位元素 */
+.route-drag-placeholder {
+    border: 2px dashed var(--accent-gold);
+    border-radius: 8px;
+    background: rgba(255, 215, 0, 0.05);
+    transition: height 0.2s;
 }
 
 .route-empty {
