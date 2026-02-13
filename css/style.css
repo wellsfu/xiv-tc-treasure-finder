@@ -1221,6 +1221,68 @@ footer a:hover {
     height: 10px;
 }
 
+/* 成員完成數 */
+.member-count-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+}
+
+.member-count-badge {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--accent-gold);
+    cursor: pointer;
+    padding: 0 2px;
+    min-width: 20px;
+    text-align: center;
+    transition: color 0.2s;
+}
+
+.member-tag.is-self .member-count-badge {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.member-count-badge:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.btn-member-count-adj {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 3px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1;
+    transition: all 0.15s;
+}
+
+.btn-member-count-adj:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    transform: scale(1.15);
+}
+
+.member-tag.is-self .btn-member-count-adj {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.member-tag.is-self .btn-member-count-adj:hover {
+    background: rgba(255, 255, 255, 0.35);
+    color: white;
+}
+
 /* 隊伍藏寶圖列表 */
 .party-treasures-section {
     margin-top: 16px;

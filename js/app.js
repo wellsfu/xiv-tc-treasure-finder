@@ -6,6 +6,65 @@ let selectedTreasure = null;
 // 暱稱儲存
 const NICKNAME_STORAGE_KEY = 'ffxiv_treasure_nickname';
 
+// 成員完成圖數儲存
+const MEMBER_COUNTS_STORAGE_KEY = 'ffxiv_treasure_member_counts';
+
+// 讀取成員完成數
+function loadMemberCounts() {
+    try {
+        const data = localStorage.getItem(MEMBER_COUNTS_STORAGE_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// 儲存成員完成數
+function saveMemberCounts(counts) {
+    try {
+        localStorage.setItem(MEMBER_COUNTS_STORAGE_KEY, JSON.stringify(counts));
+    } catch (e) {
+        console.warn('無法儲存成員完成數:', e);
+    }
+}
+
+// 增加成員完成數
+function incrementMemberCount(nickname) {
+    if (!nickname) return;
+    const counts = loadMemberCounts();
+    counts[nickname] = (counts[nickname] || 0) + 1;
+    saveMemberCounts(counts);
+    updateMembersUI();
+}
+
+// 設定成員完成數 (手動編輯)
+function setMemberCount(nickname, value) {
+    if (!nickname) return;
+    const counts = loadMemberCounts();
+    counts[nickname] = Math.max(0, parseInt(value) || 0);
+    saveMemberCounts(counts);
+    updateMembersUI();
+}
+
+// 調整成員完成數 (+1 / -1)
+function adjustMemberCount(nickname, delta) {
+    if (!nickname) return;
+    const counts = loadMemberCounts();
+    counts[nickname] = Math.max(0, (counts[nickname] || 0) + delta);
+    saveMemberCounts(counts);
+    updateMembersUI();
+}
+
+// 手動編輯成員完成數 (prompt)
+function editMemberCount(nickname) {
+    if (!nickname) return;
+    const counts = loadMemberCounts();
+    const current = counts[nickname] || 0;
+    const input = prompt(`設定 ${nickname} 的完成數：`, current);
+    if (input === null) return;
+    setMemberCount(nickname, input);
+}
+
 // 儲存暱稱到 localStorage
 function saveNickname(nickname) {
     if (nickname && nickname.trim()) {
@@ -1126,13 +1185,16 @@ function updateMembersUI() {
 
     const members = Object.entries(partyMembers);
     const maxMembers = PartyService.getMaxMembers();
+    const counts = loadMemberCounts();
 
-    // 顯示人數格式: (X/8)
     if (memberCount) memberCount.textContent = `${members.length}/${maxMembers}`;
 
     const membersHtml = members.map(([id, member]) => {
         const isSelf = id === currentUserId;
         const isLeader = member.isLeader;
+        const nickname = member.nickname;
+        const count = counts[nickname] || 0;
+        const escapedNickname = escapeHtml(nickname).replace(/'/g, "\\'");
         const editBtn = isSelf ? `
             <button class="btn-edit-nickname" onclick="promptEditNickname()" title="修改暱稱">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -1142,7 +1204,12 @@ function updateMembersUI() {
         ` : '';
         return `
             <span class="member-tag ${isSelf ? 'is-self' : ''} ${isLeader ? 'is-leader' : ''}">
-                ${escapeHtml(member.nickname)}${editBtn}
+                ${escapeHtml(nickname)}${editBtn}
+                <span class="member-count-group">
+                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${escapedNickname}', -1)" title="-1">-</button>
+                    <span class="member-count-badge" onclick="event.stopPropagation(); editMemberCount('${escapedNickname}')" title="點擊編輯完成數">(${count})</span>
+                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${escapedNickname}', 1)" title="+1">+</button>
+                </span>
             </span>
         `;
     }).join('');
@@ -1694,7 +1761,12 @@ async function moveRouteItem(firebaseKey, direction) {
 // 切換完成狀態 (使用 firebaseKey)
 async function toggleRouteComplete(firebaseKey) {
     try {
+        const treasure = partyTreasures.find(t => t.firebaseKey === firebaseKey);
+        const wasCompleted = treasure?.completed || false;
         await PartyService.toggleTreasureComplete(firebaseKey);
+        if (!wasCompleted && treasure?.addedByNickname) {
+            incrementMemberCount(treasure.addedByNickname);
+        }
     } catch (error) {
         console.error('切換狀態失敗:', error);
     }
@@ -1863,7 +1935,11 @@ async function addTreasureToParty(treasureId) {
 // 從隊伍移除藏寶圖 (使用 firebaseKey)
 async function removeTreasureFromParty(firebaseKey) {
     try {
+        const treasure = partyTreasures.find(t => t.firebaseKey === firebaseKey);
         await PartyService.removeTreasure(firebaseKey);
+        if (treasure?.addedByNickname) {
+            incrementMemberCount(treasure.addedByNickname);
+        }
     } catch (error) {
         alert('移除失敗: ' + error.message);
     }
