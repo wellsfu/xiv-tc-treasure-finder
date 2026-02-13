@@ -433,6 +433,28 @@ const PartyService = (function() {
         }
     }
 
+    // 增加成員完成數 (+1)
+    async function incrementCompletionCount(targetUserId) {
+        const sdk = window.FirebaseSDK;
+        if (!sdk) throw new Error('Firebase SDK 尚未載入');
+        if (!currentPartyCode) throw new Error('尚未加入隊伍');
+
+        const countRef = getRef(`parties/${currentPartyCode}/members/${targetUserId}/completionCount`);
+        const snapshot = await sdk.get(countRef);
+        const current = snapshot.val() || 0;
+        await sdk.set(countRef, current + 1);
+    }
+
+    // 設定成員完成數 (手動編輯 / +- 調整)
+    async function setCompletionCount(targetUserId, value) {
+        const sdk = window.FirebaseSDK;
+        if (!sdk) throw new Error('Firebase SDK 尚未載入');
+        if (!currentPartyCode) throw new Error('尚未加入隊伍');
+
+        const countRef = getRef(`parties/${currentPartyCode}/members/${targetUserId}/completionCount`);
+        await sdk.set(countRef, Math.max(0, parseInt(value) || 0));
+    }
+
     // 更新成員暱稱
     async function updateNickname(newNickname) {
         const sdk = window.FirebaseSDK;
@@ -580,6 +602,8 @@ const PartyService = (function() {
         autoOptimizeRoute,
         clearCompletedTreasures,
         updateNickname,
+        incrementCompletionCount,
+        setCompletionCount,
         getCurrentPartyCode,
         getNickname,
         isInParty,

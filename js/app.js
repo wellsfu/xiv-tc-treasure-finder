@@ -6,63 +6,37 @@ let selectedTreasure = null;
 // 暱稱儲存
 const NICKNAME_STORAGE_KEY = 'ffxiv_treasure_nickname';
 
-// 成員完成圖數儲存
-const MEMBER_COUNTS_STORAGE_KEY = 'ffxiv_treasure_member_counts';
-
-// 讀取成員完成數
-function loadMemberCounts() {
-    try {
-        const data = localStorage.getItem(MEMBER_COUNTS_STORAGE_KEY);
-        return data ? JSON.parse(data) : {};
-    } catch (e) {
-        return {};
-    }
+// 透過 userId 增加完成數 (寫入 Firebase，自動同步)
+function incrementMemberCount(userId) {
+    if (!userId) return;
+    PartyService.incrementCompletionCount(userId).catch(err => {
+        console.error('增加完成數失敗:', err);
+    });
 }
 
-// 儲存成員完成數
-function saveMemberCounts(counts) {
-    try {
-        localStorage.setItem(MEMBER_COUNTS_STORAGE_KEY, JSON.stringify(counts));
-    } catch (e) {
-        console.warn('無法儲存成員完成數:', e);
-    }
+// 透過 userId 調整完成數 (+1 / -1)
+function adjustMemberCount(userId, delta) {
+    if (!userId) return;
+    const member = partyMembers[userId];
+    if (!member) return;
+    const current = member.completionCount || 0;
+    const newVal = Math.max(0, current + delta);
+    PartyService.setCompletionCount(userId, newVal).catch(err => {
+        console.error('調整完成數失敗:', err);
+    });
 }
 
-// 增加成員完成數
-function incrementMemberCount(nickname) {
-    if (!nickname) return;
-    const counts = loadMemberCounts();
-    counts[nickname] = (counts[nickname] || 0) + 1;
-    saveMemberCounts(counts);
-    updateMembersUI();
-}
-
-// 設定成員完成數 (手動編輯)
-function setMemberCount(nickname, value) {
-    if (!nickname) return;
-    const counts = loadMemberCounts();
-    counts[nickname] = Math.max(0, parseInt(value) || 0);
-    saveMemberCounts(counts);
-    updateMembersUI();
-}
-
-// 調整成員完成數 (+1 / -1)
-function adjustMemberCount(nickname, delta) {
-    if (!nickname) return;
-    const counts = loadMemberCounts();
-    counts[nickname] = Math.max(0, (counts[nickname] || 0) + delta);
-    saveMemberCounts(counts);
-    updateMembersUI();
-}
-
-// 手動編輯成員完成數 (prompt)
-function editMemberCount(nickname) {
-    if (!nickname) return;
-    const counts = loadMemberCounts();
-    const current = counts[nickname] || 0;
+// 手動編輯完成數 (prompt)
+function editMemberCount(userId, nickname) {
+    if (!userId) return;
+    const member = partyMembers[userId];
+    const current = member?.completionCount || 0;
     const input = prompt(`設定 ${nickname} 的完成數：`, current);
     if (input === null) return;
-    setMemberCount(nickname, input);
+    const val = Math.max(0, parseInt(input) || 0);
+    PartyService.setCompletionCount(userId, val).catch(err => {
+        console.error('設定完成數失敗:', err);
+    });
 }
 
 // 儲存暱稱到 localStorage
@@ -1185,7 +1159,6 @@ function updateMembersUI() {
 
     const members = Object.entries(partyMembers);
     const maxMembers = PartyService.getMaxMembers();
-    const counts = loadMemberCounts();
 
     if (memberCount) memberCount.textContent = `${members.length}/${maxMembers}`;
 
@@ -1193,8 +1166,9 @@ function updateMembersUI() {
         const isSelf = id === currentUserId;
         const isLeader = member.isLeader;
         const nickname = member.nickname;
-        const count = counts[nickname] || 0;
-        const escapedNickname = escapeHtml(nickname).replace(/'/g, "\\'");
+        const count = member.completionCount || 0;
+        const safeId = escapeHtml(id);
+        const safeNickname = escapeHtml(nickname).replace(/'/g, "\\'");
         const editBtn = isSelf ? `
             <button class="btn-edit-nickname" onclick="promptEditNickname()" title="修改暱稱">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -1206,9 +1180,9 @@ function updateMembersUI() {
             <span class="member-tag ${isSelf ? 'is-self' : ''} ${isLeader ? 'is-leader' : ''}">
                 ${escapeHtml(nickname)}${editBtn}
                 <span class="member-count-group">
-                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${escapedNickname}', -1)" title="-1">-</button>
-                    <span class="member-count-badge" onclick="event.stopPropagation(); editMemberCount('${escapedNickname}')" title="點擊編輯完成數">(${count})</span>
-                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${escapedNickname}', 1)" title="+1">+</button>
+                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${safeId}', -1)" title="-1">-</button>
+                    <span class="member-count-badge" onclick="event.stopPropagation(); editMemberCount('${safeId}', '${safeNickname}')" title="點擊編輯完成數">(${count})</span>
+                    <button class="btn-member-count-adj" onclick="event.stopPropagation(); adjustMemberCount('${safeId}', 1)" title="+1">+</button>
                 </span>
             </span>
         `;
@@ -1764,8 +1738,8 @@ async function toggleRouteComplete(firebaseKey) {
         const treasure = partyTreasures.find(t => t.firebaseKey === firebaseKey);
         const wasCompleted = treasure?.completed || false;
         await PartyService.toggleTreasureComplete(firebaseKey);
-        if (!wasCompleted && treasure?.addedByNickname) {
-            incrementMemberCount(treasure.addedByNickname);
+        if (!wasCompleted && treasure?.addedBy) {
+            incrementMemberCount(treasure.addedBy);
         }
     } catch (error) {
         console.error('切換狀態失敗:', error);
@@ -1937,8 +1911,8 @@ async function removeTreasureFromParty(firebaseKey) {
     try {
         const treasure = partyTreasures.find(t => t.firebaseKey === firebaseKey);
         await PartyService.removeTreasure(firebaseKey);
-        if (treasure?.addedByNickname) {
-            incrementMemberCount(treasure.addedByNickname);
+        if (treasure?.addedBy) {
+            incrementMemberCount(treasure.addedBy);
         }
     } catch (error) {
         alert('移除失敗: ' + error.message);
